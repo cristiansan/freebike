@@ -4,6 +4,8 @@ import { updateHeartRate, updatePower } from './ui.js';
 
 export async function connectHR() {
   try {
+    console.log("Buscando sensor de HR...");
+
     const device = await navigator.bluetooth.requestDevice({
       filters: [{ services: ['heart_rate'] }]
     });
@@ -12,11 +14,13 @@ export async function connectHR() {
     const service = await server.getPrimaryService('heart_rate');
     const characteristic = await service.getCharacteristic('heart_rate_measurement');
 
+    await characteristic.startNotifications();
+
     characteristic.addEventListener('characteristicvaluechanged', (event) => {
       const bpm = parseHeartRate(event.target.value);
       updateHeartRate(bpm);
     });
-
+// ✅ Una vez conectado y notificando, marcamos el botón como "conectado"
     await characteristic.startNotifications();
     document.getElementById("hrConnectBtn").classList.add("connected");
     console.log('Conectado a la banda HR');
@@ -34,8 +38,8 @@ function parseHeartRate(dataView) {
 //potencia
 export async function connectPower() {
   try {
-    console.log("Buscando sensor de potencia..."); // ⬅️ Agregado
-    
+    console.log("Buscando sensor de potencia...");
+
     const device = await navigator.bluetooth.requestDevice({
       filters: [{ services: ['cycling_power'] }]
     });
@@ -44,18 +48,22 @@ export async function connectPower() {
     const service = await server.getPrimaryService('cycling_power');
     const characteristic = await service.getCharacteristic('cycling_power_measurement');
 
-    await characteristic.startNotifications(); // <- Esperar que comiencen
+    await characteristic.startNotifications();
+
     characteristic.addEventListener('characteristicvaluechanged', (event) => {
       const value = parsePower(event.target.value);
       updatePower(value);
     });
 
-    document.getElementById("powerConnectBtn").classList.add("connected"); // <- Ahora sí
+    // ✅ Una vez conectado y notificando, marcamos el botón como "conectado"
+    document.getElementById("powerConnectBtn").classList.add("connected");
     console.log('Sensor de potencia conectado');
+
   } catch (err) {
     console.error('Error conectando Potencia:', err);
   }
 }
+
 
 function parsePower(dataView) {
   // Bytes 2-3: Potencia instantánea (uint16)

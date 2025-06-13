@@ -93,6 +93,7 @@ body {
   padding: 10px;
   cursor: pointer;
   transition: all 0.2s ease;
+  outline: none;
 }
 
 .icon-button img {
@@ -105,6 +106,17 @@ body {
   border-color: #0ff;
   background-color: #333;
 }
+
+.icon-button.connected {
+  background-color: #0f0;  /* Verde */
+  border-color: #0f0;
+}
+.icon-button.connected:focus,
+.icon-button.connected:active {
+  background-color: #0f0 !important;
+  border-color: #0f0 !important;
+}
+
 
 @keyframes pulse {
   0% { transform: scale(1); opacity: 1; }

@@ -1,0 +1,29 @@
+import { updateHeartRate } from './ui.js';
+
+export async function connectHR() {
+  try {
+    const device = await navigator.bluetooth.requestDevice({
+      filters: [{ services: ['heart_rate'] }]
+    });
+
+    const server = await device.gatt.connect();
+    const service = await server.getPrimaryService('heart_rate');
+    const characteristic = await service.getCharacteristic('heart_rate_measurement');
+
+    characteristic.addEventListener('characteristicvaluechanged', (event) => {
+      const bpm = parseHeartRate(event.target.value);
+      updateHeartRate(bpm);
+    });
+
+    await characteristic.startNotifications();
+    console.log('Conectado a la banda HR');
+  } catch (error) {
+    console.error('Error conectando HR:', error);
+  }
+}
+
+function parseHeartRate(dataView) {
+  const flags = dataView.getUint8(0);
+  const rate16Bits = flags & 0x01;
+  return rate16Bits ? dataView.getUint16(1, true) : dataView.getUint8(1);
+}

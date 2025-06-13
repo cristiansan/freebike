@@ -10,4 +10,9 @@ export function updateHeartRate(value) {
 export function updatePower(value) {
   document.getElementById('power').textContent = value ?? '--';
 }
+// link y version
+document.getElementById('version-link').addEventListener('click', () => {
+  const changelog = document.getElementById('changelog');
+  changelog.style.display = changelog.style.display === 'none' ? 'block' : 'none';
+});
 

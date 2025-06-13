@@ -59,4 +59,29 @@ body {
   color: #0f0; /* verde para los valores, si querés otro color avisame */
 }
 
+.version-section {
+  margin-top: 2rem;
+  text-align: left;
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
+#version-link {
+  cursor: pointer;
+  text-decoration: underline;
+  color: #e0f1fa; /* ← color */
+}
+
+#changelog ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 0.5rem;
+  color: #cccccc; /* ← color */
+
+}
+
+#changelog li {
+  margin: 4px 0;
+}
+
 

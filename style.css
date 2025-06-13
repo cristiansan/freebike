@@ -54,10 +54,12 @@ body {
 }
 
 .value {
-  font-size: 2rem;
+  font-size: 3rem;       /* Más grande */
+  font-weight: bold;
   margin-bottom: 0.5rem;
-  color: #0f0; /* verde para los valores, si querés otro color avisame */
+  color: #00ff88;        /* Verde neón más moderno */
 }
+
 
 .version-section {
   margin-top: 2rem;
@@ -84,4 +86,32 @@ body {
   margin: 4px 0;
 }
 
+.icon-button {
+  background-color: #222;
+  border: 2px solid #555;
+  border-radius: 50%;
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
 
+.icon-button img {
+  width: 32px;
+  height: 32px;
+  filter: invert(1);
+}
+
+.icon-button:hover {
+  border-color: #0ff;
+  background-color: #333;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.75; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.value.pulse {
+  animation: pulse 0.4s ease-in-out;
+}

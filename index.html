@@ -8,18 +8,23 @@
 </head>
 <body>
 <div class="grid">
-  <div class="sensor-block">
-    <div class="label">❤️ Frecuencia Cardíaca</div>
-    <div class="value" id="hr-display">--</div>
-    <button id="hrConnectBtn">Conectar Banda</button>
-  </div>
-
-  <div class="sensor-block">
-    <div class="label">⚡ Potencia</div>
-    <div class="value" id="power">--</div>
-    <button id="powerConnectBtn">Conectar Potencia</button>
-  </div>
+  
+<div class="sensor-block">
+  <h2>❤️ FC</h2>
+  <div id="hr-display">--</div>
+  <button class="icon-button" id="hrConnectBtn" title="Conectar Banda">
+    <img src="icons/heart.svg" alt="HR Icon" />
+  </button>
 </div>
+
+<div class="sensor-block">
+  <h2>⚡ Potencia</h2>
+  <div id="power">--</div>
+  <button class="icon-button" id="powerConnectBtn" title="Conectar Potencia">
+    <img src="icons/bolt.svg" alt="Power Icon" />
+  </button>
+</div>
+
 <!-- version y log -->
 <div class="version-section">
   <a href="#" id="version-link">v0.0.3</a>

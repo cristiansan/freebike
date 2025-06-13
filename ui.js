@@ -16,3 +16,12 @@ document.getElementById('version-link').addEventListener('click', () => {
   changelog.style.display = changelog.style.display === 'none' ? 'block' : 'none';
 });
 
+// export function updateHeartRate(value) {
+//   const display = document.getElementById('hr-display');
+//   display.textContent = value ?? '--';
+
+//   // Animación de pulso
+//   display.classList.remove('pulse'); // reinicia si ya está
+//   void display.offsetWidth;          // fuerza reflow para reiniciar la animación
+//   display.classList.add('pulse');
+// }

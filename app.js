@@ -18,6 +18,7 @@ export async function connectHR() {
     });
 
     await characteristic.startNotifications();
+    document.getElementById("hrConnectBtn").classList.add("connected");
     console.log('Conectado a la banda HR');
   } catch (error) {
     console.error('Error conectando HR:', error);
@@ -41,16 +42,19 @@ export async function connectPower() {
     const service = await server.getPrimaryService('cycling_power');
     const characteristic = await service.getCharacteristic('cycling_power_measurement');
 
-    characteristic.startNotifications();
+    await characteristic.startNotifications(); // <- Esperar que comiencen
     characteristic.addEventListener('characteristicvaluechanged', (event) => {
       const value = parsePower(event.target.value);
       updatePower(value);
-      // document.getElementById('power').textContent = value + ' W';
     });
+
+    document.getElementById("powerConnectBtn").classList.add("connected"); // <- Ahora sí
+    console.log('Sensor de potencia conectado');
   } catch (err) {
     console.error('Error conectando Potencia:', err);
   }
 }
+
 function parsePower(dataView) {
   // Bytes 2-3: Potencia instantánea (uint16)
   return dataView.getUint16(2, true);

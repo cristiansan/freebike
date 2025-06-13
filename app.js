@@ -34,6 +34,8 @@ function parseHeartRate(dataView) {
 //potencia
 export async function connectPower() {
   try {
+    console.log("Buscando sensor de potencia..."); // ⬅️ Agregado
+    
     const device = await navigator.bluetooth.requestDevice({
       filters: [{ services: ['cycling_power'] }]
     });

@@ -1,4 +1,6 @@
-import { updateHeartRate } from './ui.js';
+// import { updateHeartRate } from './ui.js';
+import { updateHeartRate, updatePower } from './ui.js';
+
 
 export async function connectHR() {
   try {
@@ -42,7 +44,8 @@ export async function connectPower() {
     characteristic.startNotifications();
     characteristic.addEventListener('characteristicvaluechanged', (event) => {
       const value = parsePower(event.target.value);
-      document.getElementById('power').textContent = value + ' W';
+      updatePower(value);
+      // document.getElementById('power').textContent = value + ' W';
     });
   } catch (err) {
     console.error('Error conectando Potencia:', err);

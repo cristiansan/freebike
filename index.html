@@ -7,11 +7,21 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="container">
-    <h1>❤️ HR Monitor</h1>
-    <div id="hr-display">--</div>
-    <button id="connect-btn">Conectar Banda</button>
+<div class="grid">
+  <div class="sensor-block">
+    <div class="label">❤️ Frecuencia Cardíaca</div>
+    <div class="value" id="hr-display">--</div>
+    <button id="hrConnectBtn">Conectar Banda</button>
   </div>
+
+  <div class="sensor-block">
+    <div class="label">⚡ Potencia</div>
+    <div class="value" id="power">--</div>
+    <button id="powerConnectBtn">Conectar Potencia</button>
+  </div>
+</div>
+
+
 
   <script type="module" src="main.js"></script>
 </body>

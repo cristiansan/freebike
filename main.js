@@ -1,4 +1,4 @@
 import { setupUI } from './ui.js';
-import { connectHR } from './app.js';
+import { connectHR, connectPower } from './app.js';
 
-setupUI(connectHR);
+setupUI(connectHR, connectPower);

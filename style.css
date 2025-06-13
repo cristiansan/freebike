@@ -1,18 +1,62 @@
-body {
-  font-family: sans-serif;
-  background: #111;
-  color: white;
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.sensor-block {
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  padding: 1rem;
   text-align: center;
-  margin: 0;
-  padding: 2em;
+  background-color: #f9f9f9;
 }
 
-.container {
-  max-width: 400px;
-  margin: auto;
+.label {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
 }
 
-#hr-display {
-  font-size: 4em;
-  margin: 1em 0;
+.value {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
 }
+
+
+/* grilla */
+body {
+  background-color: #000;
+  color: #fff;
+  font-family: Arial, sans-serif;
+}
+
+.grid {
+  /* el mismo grid que antes */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.sensor-block {
+  border: 1px solid #444;
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+  background-color: #111;
+}
+
+.label {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  color: #eee;
+}
+
+.value {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  color: #0f0; /* verde para los valores, si querés otro color avisame */
+}
+
+

@@ -1,6 +1,8 @@
-export function setupUI(connectHR, connectPower) {
+export function setupUI(connectHR, connectPower, connectRPM) {
   document.getElementById("hrConnectBtn").addEventListener("click", connectHR);
   document.getElementById("powerConnectBtn").addEventListener("click", connectPower);
+  document.getElementById("rpmConnectBtn").addEventListener("click", connectRPM);
+
 }
 
 export function updateHeartRate(value) {
@@ -10,18 +12,14 @@ export function updateHeartRate(value) {
 export function updatePower(value) {
   document.getElementById('power').textContent = value ?? '--';
 }
+
+export function updateRPM(value) {
+  document.getElementById('rpm').textContent = value ?? '--';
+}
+
+
 // link y version
 document.getElementById('version-link').addEventListener('click', () => {
   const changelog = document.getElementById('changelog');
   changelog.style.display = changelog.style.display === 'none' ? 'block' : 'none';
 });
-
-// export function updateHeartRate(value) {
-//   const display = document.getElementById('hr-display');
-//   display.textContent = value ?? '--';
-
-//   // Animación de pulso
-//   display.classList.remove('pulse'); // reinicia si ya está
-//   void display.offsetWidth;          // fuerza reflow para reiniciar la animación
-//   display.classList.add('pulse');
-// }

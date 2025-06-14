@@ -1,7 +1,6 @@
-// import { updateHeartRate } from './ui.js';
 import { updateHeartRate, updatePower } from './ui.js';
 
-
+//Conector HR---------------------------------------------
 export async function connectHR() {
   try {
     console.log("Buscando sensor de HR...");
@@ -35,7 +34,7 @@ function parseHeartRate(dataView) {
   return rate16Bits ? dataView.getUint16(1, true) : dataView.getUint8(1);
 }
 
-//potencia
+//Conector Potencia---------------------------------------------
 export async function connectPower() {
   try {
     console.log("Buscando sensor de potencia...");
@@ -64,8 +63,41 @@ export async function connectPower() {
   }
 }
 
-
 function parsePower(dataView) {
   // Bytes 2-3: Potencia instantánea (uint16)
+  return dataView.getUint16(2, true);
+}
+
+//Conector Cadencia---------------------------------------------
+export async function connectRPM() {
+  try {
+    console.log("Buscando sensor de cadencia...");
+
+    const device = await navigator.bluetooth.requestDevice({
+      filters: [{ services: ['cycling_rpm'] }]
+    });
+
+    const server = await device.gatt.connect();
+    const service = await server.getPrimaryService('cycling_rpm');
+    const characteristic = await service.getCharacteristic('cycling_rpm_measurement');
+
+    await characteristic.startNotifications();
+
+    characteristic.addEventListener('characteristicvaluechanged', (event) => {
+      const value = parseRPM(event.target.value);
+      updateRPM(value);
+    });
+
+    // ✅ Una vez conectado y notificando, marcamos el botón como "conectado"
+    document.getElementById("rpmConnectBtn").classList.add("connected");
+    console.log('Sensor de cadencia conectado');
+
+  } catch (err) {
+    console.error('Error conectando Cadencia:', err);
+  }
+}
+
+function parseRPM(dataView) {
+  // Bytes 2-3: Cadencia instantánea (uint16)
   return dataView.getUint16(2, true);
 }

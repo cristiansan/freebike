@@ -1,4 +1,4 @@
-import { updateHeartRate, updatePower } from './ui.js';
+import { updateHeartRate, updatePower, updateRPM } from './ui.js';
 
 //Conector HR---------------------------------------------
 export async function connectHR() {

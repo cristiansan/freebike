@@ -74,21 +74,20 @@ export async function connectRPM() {
     console.log("Buscando sensor de cadencia...");
 
     const device = await navigator.bluetooth.requestDevice({
-      filters: [{ services: ['cycling_rpm'] }]
+      filters: [{ services: ['cycling_speed_and_cadence'] }]
     });
 
     const server = await device.gatt.connect();
-    const service = await server.getPrimaryService('cycling_rpm');
-    const characteristic = await service.getCharacteristic('cycling_rpm_measurement');
+    const service = await server.getPrimaryService('cycling_speed_and_cadence');
+    const characteristic = await service.getCharacteristic('csc_measurement');
 
     await characteristic.startNotifications();
 
     characteristic.addEventListener('characteristicvaluechanged', (event) => {
-      const value = parseRPM(event.target.value);
-      updateRPM(value);
+      const rpm = parseRPM(event.target.value);
+      if (rpm !== null) updateRPM(rpm);
     });
 
-    // ✅ Una vez conectado y notificando, marcamos el botón como "conectado"
     document.getElementById("rpmConnectBtn").classList.add("connected");
     console.log('Sensor de cadencia conectado');
 
@@ -98,6 +97,22 @@ export async function connectRPM() {
 }
 
 function parseRPM(dataView) {
-  // Bytes 2-3: Cadencia instantánea (uint16)
-  return dataView.getUint16(2, true);
+  const flags = dataView.getUint8(0);
+  const crankDataPresent = flags & 0x02;
+
+  if (!crankDataPresent) {
+    console.warn("Cadence data not present");
+    return null;
+  }
+
+  // Byte offset depende de si también viene la info de velocidad
+  let offset = (flags & 0x01) ? 7 : 1; // +6 si incluye wheel data
+
+  const crankRevs = dataView.getUint16(offset, true);
+  const crankTime = dataView.getUint16(offset + 2, true);
+
+  if (crankTime === 0) return 0;
+
+  const cadence = (crankRevs / (crankTime / 1024)) * 60;
+  return Math.round(cadence);
 }

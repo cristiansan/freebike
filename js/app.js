@@ -20,12 +20,23 @@ export async function connectHR() {
       updateHeartRate(bpm);
     });
 // ✅ Una vez conectado y notificando, marcamos el botón como "conectado"
-    await characteristic.startNotifications();
+    // await characteristic.startNotifications();
     document.getElementById("hrConnectBtn").classList.add("connected");
     console.log('Conectado a la banda HR');
   } catch (error) {
     console.error('Error conectando HR:', error);
   }
+  // Al final de connectHR(), justo después de marcar botón conectado y mostrar consola
+window.holdTriggered = false;
+
+const startStopBtn = document.getElementById('startStopBtn');
+holdTriggered = false;
+startStopBtn.classList.remove('holding', 'paused', 'recording');
+isRecording = false;
+isPaused = false;
+updateButtonUI();
+
+
 }
 
 function parseHeartRate(dataView) {

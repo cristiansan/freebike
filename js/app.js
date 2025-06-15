@@ -140,3 +140,66 @@ function parseRPM(dataView) {
   lastCrankEventTime = crankEventTime;
   return null;
 }
+//Conector GPS---------------------------------------------
+let lastPosition = null;
+let totalDistance = 0;
+
+function toRad(deg) {
+  return deg * Math.PI / 180;
+}
+
+function haversineDistance(pos1, pos2) {
+  const R = 6371000; // radio Tierra en metros
+  const dLat = toRad(pos2.latitude - pos1.latitude);
+  const dLon = toRad(pos2.longitude - pos1.longitude);
+
+  const a = Math.sin(dLat / 2) ** 2 +
+            Math.cos(toRad(pos1.latitude)) *
+            Math.cos(toRad(pos2.latitude)) *
+            Math.sin(dLon / 2) ** 2;
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+export function startGPS() {
+  if (!navigator.geolocation) {
+    console.error("GPS no disponible");
+    return;
+  }
+
+  navigator.geolocation.watchPosition(
+    (position) => {
+      const coords = position.coords;
+      const current = {
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        timestamp: position.timestamp,
+      };
+
+      if (lastPosition) {
+        const deltaT = (current.timestamp - lastPosition.timestamp) / 1000;
+        const deltaD = haversineDistance(lastPosition, current);
+
+        if (deltaT > 0 && deltaD < 100) {
+          const speed = deltaD / deltaT; // m/s
+          totalDistance += deltaD;
+
+          const speedElement = document.getElementById('gps-speed');
+          const distanceElement = document.getElementById('gps-distance');
+
+          if (speedElement) speedElement.textContent = (speed * 3.6).toFixed(1) + ' km/h';
+          if (distanceElement) distanceElement.textContent = (totalDistance / 1000).toFixed(2) + ' km';
+        }
+      }
+
+      lastPosition = current;
+    },
+    (err) => console.error("Error GPS:", err),
+    {
+      enableHighAccuracy: true,
+      maximumAge: 1000,
+      timeout: 5000,
+    }
+  );
+}

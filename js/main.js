@@ -33,17 +33,20 @@ startStopBtn.addEventListener('click', () => {
     startStopLabel.innerHTML = "🔴 Grabando sesión...";
     startStopBtn.classList.add("recording");
     startStopBtn.classList.remove("paused");
-
+    
+    const now = new Date();  // fecha local al crear sesión
     const sessionData = {
       bpm: parseInt(document.getElementById('hr-display').textContent),
       power: parseInt(document.getElementById('power').textContent),
       rpm: parseInt(document.getElementById('rpm').textContent),
       speed: parseFloat(document.getElementById('gps-speed').textContent),
-      distance: parseFloat(document.getElementById('gps-distance').textContent)
+      distance: parseFloat(document.getElementById('gps-distance').textContent),
+      createdAt: now
     };
 
     console.log("Datos a guardar:", sessionData);
     saveSession(sessionData);
+    appendSessionToList(sessionData); // ⬅️ Esta línea agregala justo acá
   } else if (!isPaused) {
     isPaused = true;
     startStopLabel.innerHTML = "⏸️ HOLD TO STOP";
@@ -70,6 +73,14 @@ function cancelHoldToStop() {
   clearTimeout(holdTimeout);
   startStopBtn.classList.remove('holding');
 }
+//Historial
+function appendSessionToList(data) {
+  const li = document.createElement('li');
+  li.textContent = `FC: ${data.bpm}, Pot: ${data.power}, RPM: ${data.rpm}, Vel: ${data.speed} km/h, Dist: ${data.distance} km`;
+  document.getElementById('session-list').prepend(li);
+}
+
+
 
 // Eventos compatibles con mouse y touch
 startStopBtn.addEventListener('mousedown', startHoldToStop);
@@ -78,3 +89,5 @@ startStopBtn.addEventListener('mouseleave', cancelHoldToStop);
 startStopBtn.addEventListener('touchstart', startHoldToStop);
 startStopBtn.addEventListener('touchend', cancelHoldToStop);
 startStopBtn.addEventListener('touchcancel', cancelHoldToStop);
+
+

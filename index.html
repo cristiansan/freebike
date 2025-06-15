@@ -27,7 +27,10 @@
       </svg>
     </div>
   </button>
-
+</div>
+<div class="sensor-block" id="session-history">
+  <h2>🧾 Historial</h2>
+  <ul id="session-list"></ul>
 </div>
 
 <div class="sensor-block">
@@ -74,10 +77,11 @@
 
 <!-- Versiones -->
 <div class="version-section">
-  <a href="#" id="version-link">v0.7</a>
+  <a href="#" id="version-link">v0.8</a>
   <div id="changelog" style="display: none;">
     <ul>
-      <li>v0.7 - Implementando</li>
+      <li>v0.8 - Historial y timestamp</li>
+      <li>v0.7 - Implementando Firebase</li>
       <li>v0.6 - Velocidad e Distancia</li>
       <li>v0.5 - Agregado sensor de Cadencia</li>
       <li>v0.4 - Botones conectados en verde</li>
@@ -92,6 +96,7 @@
 <div id="recording-indicator" style="display: none;" class="recording">
   🔴 Grabando sesión...
 </div>
+
 
 <script type="module" src="js/main.js"></script>
 </body>

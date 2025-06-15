@@ -83,24 +83,6 @@ body {
   animation: pulse 0.4s ease-in-out;
 }
 
-/* .recording {
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
-  background-color: rgba(255, 0, 0, 0.8);
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 1rem;
-  font-weight: bold;
-  z-index: 999;
-  animation: blink 1s infinite;
-}
-
-@keyframes blink {
-  0% { opacity: 1; }
-  50% { opacity: 0.3; }
-  100% { opacity: 1; }
-} */
 
 .full-width {
   grid-column: 1 / -1;
@@ -171,6 +153,17 @@ body {
   opacity: 1;
   animation: holdProgress 1.5s linear forwards;
 }
+
+#startStopBtn.recording {
+  background-color: #0f0 !important;
+  color: #000;
+}
+
+#startStopBtn.paused {
+  background-color: orange !important;
+  color: #000;
+}
+
 
 @keyframes holdProgress {
   from {

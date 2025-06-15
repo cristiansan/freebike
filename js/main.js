@@ -23,13 +23,14 @@ let isPaused = false;
 let holdTimeout = null;
 
 const startStopBtn = document.getElementById('startStopBtn');
+const startStopLabel = document.getElementById('startStopLabel');
 const progressCircle = startStopBtn.querySelector('.hold-progress');
 
 startStopBtn.addEventListener('click', () => {
   if (!isRecording) {
     isRecording = true;
     isPaused = false;
-    startStopBtn.textContent = "🔴 Grabando sesión...";
+    startStopLabel.innerHTML = "🔴 Grabando sesión...";
     startStopBtn.classList.add("recording");
     startStopBtn.classList.remove("paused");
 
@@ -45,7 +46,7 @@ startStopBtn.addEventListener('click', () => {
     saveSession(sessionData);
   } else if (!isPaused) {
     isPaused = true;
-    startStopBtn.textContent = "⏸️ HOLD TO STOP";
+    startStopLabel.innerHTML = "⏸️ HOLD TO STOP";
     startStopBtn.classList.remove("recording");
     startStopBtn.classList.add("paused");
   }
@@ -58,7 +59,7 @@ function startHoldToStop() {
     holdTimeout = setTimeout(() => {
       isRecording = false;
       isPaused = false;
-      startStopBtn.textContent = "▶️ Start";
+      startStopLabel.innerHTML = "▶️ Start";
       startStopBtn.classList.remove("recording", "paused", "holding");
       console.log("Sesión detenida.");
     }, 1500);

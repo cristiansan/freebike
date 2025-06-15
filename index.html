@@ -2,10 +2,10 @@
 <html lang="es">
 <head>
   <!-- Para dispositivos Android -->
-<meta name="mobile-web-app-capable" content="yes">
-<!-- Para dispositivos iOS -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <!-- Para dispositivos iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -13,9 +13,100 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="manifest" href="manifest.json">
 
+  <style>
+    /* Estilos para el botón grabación con progreso visual */
+
+    #startStopBtn {
+      position: relative;
+      font-size: 1.2rem;
+      padding: 0.6rem 1.5rem;
+      cursor: pointer;
+      user-select: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background-color: #222;
+      color: #fff;
+      border: 2px solid #444;
+      border-radius: 8px;
+      transition: background-color 0.3s;
+    }
+
+    #startStopBtn.recording {
+      background-color: #330000;
+      border-color: #f00;
+      color: #f44;
+    }
+
+    #startStopBtn.paused {
+      background-color: #333333;
+      border-color: #ccc;
+      color: #ccc;
+    }
+
+    /* Contenedor del progreso de hold */
+    .hold-progress {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      width: 24px;
+      height: 24px;
+      visibility: hidden;
+    }
+
+    /* Mostrar animación mientras se mantiene presionado */
+    #startStopBtn.holding .hold-progress {
+      visibility: visible;
+      animation: progressHold 1.5s linear forwards;
+    }
+
+    .progress-bg {
+      stroke: #555;
+      fill: none;
+      stroke-width: 4;
+      r: 16;
+      cx: 18;
+      cy: 18;
+    }
+
+    .progress-bar {
+      stroke-dasharray: 100;
+      stroke-dashoffset: 100;
+      stroke-linecap: round;
+      stroke: #f00;
+      fill: none;
+      stroke-width: 4;
+      r: 16;
+      cx: 18;
+      cy: 18;
+      transform-origin: center;
+    }
+
+    @keyframes progressHold {
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+  </style>
 </head>
 <body>
+
 <div class="grid">
+
+  <!-- Botón Start / Grabando / Pausa / Stop -->
+  <button class="icon-button" id="startStopBtn" title="Iniciar Grabación">
+    ▶️ Start
+    <svg class="hold-progress" width="36" height="36" viewBox="0 0 36 36" aria-hidden="true" focusable="false">
+      <circle class="progress-bg" cx="18" cy="18" r="16"></circle>
+      <circle class="progress-bar" cx="18" cy="18" r="16"></circle>
+    </svg>
+  </button>
+
+</div>
+
+<!-- botones sensores -->
 
 <div class="sensor-block">
   <h2>❤️ FC</h2>
@@ -42,6 +133,14 @@
 </div>
 
 <div class="sensor-block">
+  <h2>🚴‍♂️ / 🏃‍♂️ Velocidad</h2>
+  <div id="speed" class="value">--</div>
+  <button class="icon-button" id="speedModeBtn" title="Cambiar Modo">
+    <img id="speedModeIcon" src="icons/bike.svg" alt="Modo Bicicleta" />
+  </button>
+</div>
+
+<div class="sensor-block">
   <h2>📍 Velocidad</h2>
   <div id="gps-speed" class="value">--</div>
 </div>
@@ -51,12 +150,12 @@
   <div id="gps-distance" class="value">--</div>
 </div>
 
-
-<!-- version y log -->
+<!-- versión y log -->
 <div class="version-section">
-  <a href="#" id="version-link">v0.6</a>
+  <a href="#" id="version-link">v0.7</a>
   <div id="changelog" style="display: none;">
     <ul>
+      <li>v0.7 - Implementando</li>
       <li>v0.6 - Velocidad e Distancia</li>
       <li>v0.5 - Agregado sensor de Cadencia</li>
       <li>v0.4 - Botones conectados en verde</li>
@@ -65,6 +164,10 @@
       <li>v0.1 - Conexión con banda HR</li>
     </ul>
   </div>
+</div>
+
+<div id="recording-indicator" style="display: none;" class="recording">
+  🔴 Grabando sesión...
 </div>
 
 <script type="module" src="js/main.js"></script>

@@ -1,6 +1,7 @@
 .label {
   font-weight: bold;
   margin-bottom: 0.5rem;
+  color: #eee;
 }
 body {
   background-color: #000;
@@ -19,11 +20,6 @@ body {
   padding: 1rem;
   text-align: center;
   background-color: #111;
-}
-.label {
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-  color: #eee;
 }
 .value {
   font-size: 3rem;       /* Más grande */
@@ -85,4 +81,106 @@ body {
 }
 .value.pulse {
   animation: pulse 0.4s ease-in-out;
+}
+
+/* .recording {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  background-color: rgba(255, 0, 0, 0.8);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 1rem;
+  font-weight: bold;
+  z-index: 999;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; }
+  100% { opacity: 1; }
+} */
+
+.full-width {
+  grid-column: 1 / -1;
+  text-align: center;
+}
+
+.record-button {
+  font-size: 1.2rem;
+  padding: 0.8rem 2rem;
+  border-radius: 2rem;
+  border: none;
+  background-color: #444;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+/* Estados del botón Start/Stop */
+.recording {
+  background-color: #c00 !important; /* rojo */
+  border-color: #c00 !important;
+  color: #fff !important;
+}
+
+.paused {
+  background-color: #999 !important; /* gris */
+  border-color: #999 !important;
+  color: #222 !important;
+}
+
+/* Botón startStop */
+#startStopBtn {
+  position: relative;
+  overflow: hidden;
+  font-size: 1.2rem;
+  padding: 0.6rem 1.5rem;
+  cursor: pointer;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #222;
+  color: #fff;
+  border: 2px solid #444;
+  border-radius: 8px;
+  transition: background-color 0.3s;
+}
+
+/* Círculo de progreso para hold */
+.hold-progress {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  transform: translateY(-50%);
+  pointer-events: none;
+  opacity: 0;
+  animation: none;
+  border-radius: 50%;
+  box-sizing: border-box;
+  border: 3px solid red;
+  transform-origin: center;
+}
+
+#startStopBtn.holding .hold-progress {
+  opacity: 1;
+  animation: holdProgress 1.5s linear forwards;
+}
+
+@keyframes holdProgress {
+  from {
+    transform: scale(1);
+    border-color: red;
+    opacity: 0.5;
+  }
+  to {
+    transform: scale(1.2);
+    border-color: limegreen;
+    opacity: 1;
+  }
 }

@@ -1,15 +1,34 @@
 // ----------------------
 // UI Setup
 // ----------------------
+let isRunning = false; // Esto debe estar fuera de la función
+
 export function setupUI(connectHR, connectPower, connectRPM) {
   // Botones de conexión
   const hrBtn = document.getElementById("hrConnectBtn");
   const powerBtn = document.getElementById("powerConnectBtn");
   const rpmBtn = document.getElementById("rpmConnectBtn");
+  const speedBtn = document.getElementById("speedModeBtn");
+  const speedIcon = document.getElementById("speedModeIcon");
 
   if (hrBtn) hrBtn.addEventListener("click", connectHR);
   if (powerBtn) powerBtn.addEventListener("click", connectPower);
   if (rpmBtn) rpmBtn.addEventListener("click", connectRPM);
+
+  // Botón para cambiar entre modo bici / correr
+  if (speedBtn && speedIcon) {
+    speedBtn.addEventListener("click", () => {
+      isRunning = !isRunning;
+      speedIcon.src = isRunning ? "icons/run.svg" : "icons/bike.svg";
+      speedIcon.alt = isRunning ? "Modo Correr" : "Modo Bicicleta";
+
+      // Actualizar formato si ya hay valor mostrado
+      const speedElem = document.getElementById("speed");
+      if (speedElem.dataset.rawSpeed) {
+        updateSpeed(parseFloat(speedElem.dataset.rawSpeed));
+      }
+    });
+  }
 
   // Versión y changelog toggle
   const versionLink = document.getElementById('version-link');
@@ -21,6 +40,7 @@ export function setupUI(connectHR, connectPower, connectRPM) {
     });
   }
 }
+
 
 // ----------------------
 // Actualizaciones UI
@@ -36,5 +56,28 @@ export function updatePower(value) {
 export function updateRPM(value) {
   document.getElementById('rpm').textContent = value ?? '--';
 }
+
+export function updateSpeed(mps) {
+  const elem = document.getElementById("speed");
+  if (!elem) return;
+
+  elem.dataset.rawSpeed = mps;
+
+  if (isRunning) {
+    if (mps > 0) {
+      const pace = 1000 / (mps * 60);
+      const min = Math.floor(pace);
+      const sec = Math.round((pace - min) * 60).toString().padStart(2, '0');
+      elem.textContent = `${min}:${sec} /km`;
+    } else {
+      elem.textContent = "--";
+    }
+  } else {
+    elem.textContent = `${(mps * 3.6).toFixed(1)} km/h`;
+  }
+}
+
+
+
 
 

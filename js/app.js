@@ -96,23 +96,47 @@ export async function connectRPM() {
   }
 }
 
+let lastCrankRevolutions = null;
+let lastCrankEventTime = null;
+
 function parseRPM(dataView) {
   const flags = dataView.getUint8(0);
-  const crankDataPresent = flags & 0x02;
+  const crankDataPresent = (flags & 0x02) !== 0;
 
-  if (!crankDataPresent) {
-    console.warn("Cadence data not present");
-    return null;
+  if (!crankDataPresent) return null;
+
+  let index = 1;
+
+  // Saltar datos de rueda si están presentes
+  if (flags & 0x01) index += 6;
+
+  const crankRevolutions = dataView.getUint16(index, true);
+  const crankEventTime = dataView.getUint16(index + 2, true); // en 1/1024 seg
+
+  if (lastCrankRevolutions !== null && lastCrankEventTime !== null) {
+    let deltaRevs = crankRevolutions - lastCrankRevolutions;
+    let deltaTime = crankEventTime - lastCrankEventTime;
+
+    // Controlar overflow del contador (16 bits)
+    if (deltaTime < 0) deltaTime += 65536;
+
+    const deltaSeconds = deltaTime / 1024;
+
+    if (deltaSeconds > 0 && deltaRevs >= 0) {
+      const rpm = (deltaRevs / deltaSeconds) * 60;
+       if (rpm > 300) {
+        console.warn(`RPM fuera de rango: ${rpm.toFixed(1)}`);
+        return null;
+      }
+      lastCrankRevolutions = crankRevolutions;
+      lastCrankEventTime = crankEventTime;
+      console.log(`Crank deltaRevs: ${deltaRevs}, deltaTime: ${deltaSeconds.toFixed(2)}s, RPM: ${rpm.toFixed(1)}`);
+
+      return Math.round(rpm);
+    }
   }
 
-  // Byte offset depende de si también viene la info de velocidad
-  let offset = (flags & 0x01) ? 7 : 1; // +6 si incluye wheel data
-
-  const crankRevs = dataView.getUint16(offset, true);
-  const crankTime = dataView.getUint16(offset + 2, true);
-
-  if (crankTime === 0) return 0;
-
-  const cadence = (crankRevs / (crankTime / 1024)) * 60;
-  return Math.round(cadence);
+  lastCrankRevolutions = crankRevolutions;
+  lastCrankEventTime = crankEventTime;
+  return null;
 }

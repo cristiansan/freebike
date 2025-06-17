@@ -56,11 +56,12 @@ body {
 }
 
 #startStopBtn {
-  width: 200px;
+  width: 100%;
+  max-width: 380px; /* Opcional: límite para pantallas grandes */
   height: 60px;
   font-size: 1.2rem; /* También podés aumentar el texto */
   display: block;
-  margin: 0 auto;
+  margin: 1rem auto;
   margin-bottom: 1rem;
   background-color: #36aa00;
   border: none;

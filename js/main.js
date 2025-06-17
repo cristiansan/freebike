@@ -40,6 +40,18 @@ function releaseWakeLock() {
   }
 }
 
+// --- Activar modo pantalla completa ---
+function launchFullscreen() {
+  const el = document.documentElement;
+  if (el.requestFullscreen) {
+    el.requestFullscreen();
+  } else if (el.webkitRequestFullscreen) {
+    el.webkitRequestFullscreen();
+  } else if (el.msRequestFullscreen) {
+    el.msRequestFullscreen();
+  }
+}
+
 // --- Tiempo real de sesión ---
 function getElapsedTimeMs() {
   if (!startTime) return 0;
@@ -104,7 +116,7 @@ function updateButtonUI() {
     startStopLabel.textContent = "▶️ Start";
     startStopBtn.classList.remove("recording", "paused", "holding");
   } else if (isPaused) {
-    startStopLabel.textContent = "⏸️ Pause/Resume \n(or HOLD TO STOP)";
+    startStopLabel.textContent = "⏸️ HOLD TO STOP";
     startStopBtn.classList.remove("recording");
     startStopBtn.classList.add("paused");
   } else {
@@ -112,26 +124,6 @@ function updateButtonUI() {
     startStopBtn.classList.add("recording");
     startStopBtn.classList.remove("paused", "holding");
   }
-}
-
-// --- Detener sesión ---
-function stopSession() {
-  isRecording = false;
-  isPaused = false;
-  holdTriggered = false;
-  startTime = null;
-  pauseStart = null;
-  pausedDuration = 0;
-
-  if (timeInterval) {
-    clearInterval(timeInterval);
-    timeInterval = null;
-  }
-
-  sessionTimeDisplay.textContent = "⏱ 00:00";
-  releaseWakeLock();
-  updateButtonUI();
-  console.log("Sesión detenida.");
 }
 
 // --- Click corto: Start / Pause / Resume ---
@@ -143,12 +135,11 @@ function handleClick() {
     isPaused = false;
     startTime = new Date();
     pausedDuration = 0;
-
-    if (timeInterval) clearInterval(timeInterval);
     timeInterval = setInterval(updateElapsedTime, 1000);
     updateElapsedTime();
     requestWakeLock();
     guardarSesionActual();
+    launchFullscreen(); // ⬅️ Entrar en pantalla completa al comenzar
   } else if (!isPaused) {
     isPaused = true;
     pauseStart = new Date();
@@ -170,7 +161,16 @@ function startHoldToStop() {
     startStopBtn.classList.add('holding');
     holdTimeout = setTimeout(() => {
       holdTriggered = true;
-      stopSession(); // ✅ usamos función separada
+      isRecording = false;
+      isPaused = false;
+      startTime = null;
+      pauseStart = null;
+      pausedDuration = 0;
+      clearInterval(timeInterval);
+      sessionTimeDisplay.textContent = "⏱ 00:00";
+      releaseWakeLock();
+      updateButtonUI();
+      console.log("Sesión detenida.");
     }, 1500);
   }
 }

@@ -10,9 +10,33 @@ let isRecording = false;
 let isPaused = false;
 let holdTimeout = null;
 let holdTriggered = false;
+let wakeLock = null; // 🔒 Para mantener pantalla encendida
 
 const startStopBtn = document.getElementById('startStopBtn');
 const startStopLabel = document.getElementById('startStopLabel');
+
+// 🔒 Solicita mantener pantalla encendida
+async function requestWakeLock() {
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+    console.log("🔒 Pantalla mantenida encendida");
+
+    wakeLock.addEventListener('release', () => {
+      console.log("🔓 Wake lock liberado");
+    });
+  } catch (err) {
+    console.error("Error solicitando wake lock:", err);
+  }
+}
+
+// 🔓 Libera pantalla
+async function releaseWakeLock() {
+  if (wakeLock) {
+    await wakeLock.release();
+    wakeLock = null;
+    console.log("🔓 Wake lock liberado manualmente");
+  }
+}
 
 // Guarda sesión en Firestore
 async function saveSession(data) {
@@ -74,23 +98,23 @@ function guardarSesionActual() {
 }
 
 function handleClick() {
+  console.log("Start/Stop button clicked", { isRecording, isPaused, holdTriggered });
+
   if (holdTriggered) {
-    // Ignorar clicks tras hold para evitar estados extraños
     return;
   }
-  
+
   if (!isRecording) {
-    // Iniciar grabación
     isRecording = true;
     isPaused = false;
     guardarSesionActual();
+    requestWakeLock(); // 🔒 Activa bloqueo de pantalla
   } else if (!isPaused) {
-    // Pausar grabación
     isPaused = true;
   } else {
-    // Reanudar grabación
     isPaused = false;
   }
+
   updateButtonUI();
 }
 
@@ -103,6 +127,7 @@ function startHoldToStop() {
       holdTriggered = true;
       isRecording = false;
       isPaused = false;
+      releaseWakeLock(); // 🔓 Libera bloqueo
       updateButtonUI();
       console.log("Sesión detenida.");
     }, 1500);
@@ -119,12 +144,8 @@ function cancelHoldToStop() {
 
 startStopBtn.addEventListener('click', handleClick);
 startStopBtn.addEventListener('mousedown', startHoldToStop);
-startStopBtn.addEventListener('mouseup', () => {
-  cancelHoldToStop();
-});
+startStopBtn.addEventListener('mouseup', cancelHoldToStop);
 startStopBtn.addEventListener('mouseleave', cancelHoldToStop);
 startStopBtn.addEventListener('touchstart', startHoldToStop);
-startStopBtn.addEventListener('touchend', () => {
-  cancelHoldToStop();
-});
+startStopBtn.addEventListener('touchend', cancelHoldToStop);
 startStopBtn.addEventListener('touchcancel', cancelHoldToStop);

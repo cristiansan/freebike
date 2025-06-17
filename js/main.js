@@ -10,35 +10,53 @@ let isRecording = false;
 let isPaused = false;
 let holdTimeout = null;
 let holdTriggered = false;
-let wakeLock = null; // 🔒 Para mantener pantalla encendida
+let startTime = null;
+let pauseStart = null;
+let pausedDuration = 0;
+let timeInterval = null;
+let wakeLock = null;
 
 const startStopBtn = document.getElementById('startStopBtn');
 const startStopLabel = document.getElementById('startStopLabel');
+const sessionTimeDisplay = document.getElementById('session-time');
 
-// 🔒 Solicita mantener pantalla encendida
+// --- Mantener pantalla activa ---
 async function requestWakeLock() {
   try {
     wakeLock = await navigator.wakeLock.request('screen');
-    console.log("🔒 Pantalla mantenida encendida");
-
+    console.log('Wake Lock activado');
     wakeLock.addEventListener('release', () => {
-      console.log("🔓 Wake lock liberado");
+      console.log('Wake Lock liberado');
     });
   } catch (err) {
-    console.error("Error solicitando wake lock:", err);
+    console.error('Error al activar Wake Lock:', err);
   }
 }
 
-// 🔓 Libera pantalla
-async function releaseWakeLock() {
+function releaseWakeLock() {
   if (wakeLock) {
-    await wakeLock.release();
+    wakeLock.release();
     wakeLock = null;
-    console.log("🔓 Wake lock liberado manualmente");
   }
 }
 
-// Guarda sesión en Firestore
+// --- Tiempo real de sesión ---
+function getElapsedTimeMs() {
+  if (!startTime) return 0;
+  const now = new Date();
+  const elapsed = now - startTime - pausedDuration;
+  return elapsed;
+}
+
+function updateElapsedTime() {
+  const ms = getElapsedTimeMs();
+  const seconds = Math.floor(ms / 1000);
+  const min = Math.floor(seconds / 60).toString().padStart(2, '0');
+  const sec = (seconds % 60).toString().padStart(2, '0');
+  sessionTimeDisplay.textContent = `⏱ ${min}:${sec}`;
+}
+
+// --- Guardar sesión en Firebase ---
 async function saveSession(data) {
   try {
     const docRef = await addDoc(collection(db, "sesiones"), {
@@ -51,36 +69,19 @@ async function saveSession(data) {
   }
 }
 
-// Añade la sesión al historial visible
+// --- Mostrar en lista ---
 function appendSessionToList(data) {
   const li = document.createElement('li');
-
   const fecha = data.createdAt instanceof Date
     ? data.createdAt
     : new Date(data.createdAt?.seconds * 1000 || Date.now());
 
   const fechaStr = fecha.toLocaleDateString() + ' ' + fecha.toLocaleTimeString();
-
   li.textContent = `[${fechaStr}] FC: ${data.bpm}, Pot: ${data.power}, RPM: ${data.rpm}, Vel: ${data.speed} km/h, Dist: ${data.distance} km`;
-
   document.getElementById('session-list').prepend(li);
 }
 
-function updateButtonUI() {
-  if (!isRecording) {
-    startStopLabel.textContent = "▶️ Start";
-    startStopBtn.classList.remove("recording", "paused", "holding");
-  } else if (isPaused) {
-    startStopLabel.textContent = "⏸️ HOLD TO STOP";
-    startStopBtn.classList.remove("recording");
-    startStopBtn.classList.add("paused");
-  } else {
-    startStopLabel.textContent = "🔴 Grabando sesión...";
-    startStopBtn.classList.add("recording");
-    startStopBtn.classList.remove("paused", "holding");
-  }
-}
-
+// --- Guardar datos actuales ---
 function guardarSesionActual() {
   const now = new Date();
   const sessionData = {
@@ -97,39 +98,79 @@ function guardarSesionActual() {
   appendSessionToList(sessionData);
 }
 
-function handleClick() {
-  console.log("Start/Stop button clicked", { isRecording, isPaused, holdTriggered });
-
-  if (holdTriggered) {
-    return;
+// --- UI del botón ---
+function updateButtonUI() {
+  if (!isRecording) {
+    startStopLabel.textContent = "▶️ Start";
+    startStopBtn.classList.remove("recording", "paused", "holding");
+  } else if (isPaused) {
+    startStopLabel.textContent = "⏸️ Pause/Resume \n(or HOLD TO STOP)";
+    startStopBtn.classList.remove("recording");
+    startStopBtn.classList.add("paused");
+  } else {
+    startStopLabel.textContent = "🔴 Grabando sesión...";
+    startStopBtn.classList.add("recording");
+    startStopBtn.classList.remove("paused", "holding");
   }
+}
+
+// --- Detener sesión ---
+function stopSession() {
+  isRecording = false;
+  isPaused = false;
+  holdTriggered = false;
+  startTime = null;
+  pauseStart = null;
+  pausedDuration = 0;
+
+  if (timeInterval) {
+    clearInterval(timeInterval);
+    timeInterval = null;
+  }
+
+  sessionTimeDisplay.textContent = "⏱ 00:00";
+  releaseWakeLock();
+  updateButtonUI();
+  console.log("Sesión detenida.");
+}
+
+// --- Click corto: Start / Pause / Resume ---
+function handleClick() {
+  if (holdTriggered) return;
 
   if (!isRecording) {
     isRecording = true;
     isPaused = false;
+    startTime = new Date();
+    pausedDuration = 0;
+
+    if (timeInterval) clearInterval(timeInterval);
+    timeInterval = setInterval(updateElapsedTime, 1000);
+    updateElapsedTime();
+    requestWakeLock();
     guardarSesionActual();
-    requestWakeLock(); // 🔒 Activa bloqueo de pantalla
   } else if (!isPaused) {
     isPaused = true;
+    pauseStart = new Date();
   } else {
     isPaused = false;
+    if (pauseStart) {
+      pausedDuration += new Date() - pauseStart;
+      pauseStart = null;
+    }
   }
 
   updateButtonUI();
 }
 
-// Hold largo para detener la sesión grabada
+// --- Hold largo: detener grabación ---
 function startHoldToStop() {
   if (isRecording && isPaused) {
     holdTriggered = false;
     startStopBtn.classList.add('holding');
     holdTimeout = setTimeout(() => {
       holdTriggered = true;
-      isRecording = false;
-      isPaused = false;
-      releaseWakeLock(); // 🔓 Libera bloqueo
-      updateButtonUI();
-      console.log("Sesión detenida.");
+      stopSession(); // ✅ usamos función separada
     }, 1500);
   }
 }
@@ -142,6 +183,7 @@ function cancelHoldToStop() {
   startStopBtn.classList.remove('holding');
 }
 
+// --- Eventos del botón ---
 startStopBtn.addEventListener('click', handleClick);
 startStopBtn.addEventListener('mousedown', startHoldToStop);
 startStopBtn.addEventListener('mouseup', cancelHoldToStop);

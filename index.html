@@ -15,90 +15,100 @@
 </head>
 <body>
 
-<div class="grid">
-
   <!-- Botón Start / Grabando / Pausa / Stop -->
-  <button class="icon-button" id="startStopBtn" title="Iniciar Grabación">
+  <button class="icon-button" id="startStopBtn" title="Iniciar Grabación" 
+  style="justify-self: center; width: 380px;">
     <span id="startStopLabel">▶️ Start</span>
     <div class="hold-progress">
       <svg class="hold-progress" width="36" height="36" viewBox="0 0 36 36" aria-hidden="true" focusable="false">
-        <circle class="progress-bg" cx="18" cy="18" r="16"></circle>
-        <circle class="progress-bar" cx="18" cy="18" r="16"></circle>
+        <!-- <circle class="progress-bg" cx="18" cy="18" r="16"></circle> -->
+        <!-- <circle class="progress-bar" cx="18" cy="18" r="16"></circle> -->
       </svg>
     </div>
   </button>
-</div>
-<div class="sensor-block" id="session-history">
-  <h2>🧾 Historial</h2>
-  <ul id="session-list"></ul>
-</div>
 
-<div class="sensor-block">
-  <h2>❤️ FC</h2>
-  <div id="hr-display" class="value">--</div>
-  <button class="icon-button" id="hrConnectBtn" title="Conectar Banda">
-    <img src="icons/heart.svg" alt="HR Icon" />
-  </button>
-</div>
+  <div class="grid">
 
-<div class="sensor-block">
-  <h2>⚡ Potencia</h2>
-  <div id="power" class="value">--</div>
-  <button class="icon-button" id="powerConnectBtn" title="Conectar Potencia">
-    <img src="icons/bolt.svg" alt="Power Icon" />
-  </button>
-</div>
+    <!-- Tiempo -->
+    <div class="sensor-block">
+      <h2>⏱ Tiempo</h2>
+      <div id="session-time" class="value">00:00</div>
+    </div>
 
-<div class="sensor-block">
-  <h2>⚡ Cadencia</h2>
-  <div id="rpm" class="value">--</div>
-  <button class="icon-button" id="rpmConnectBtn" title="Conectar Cadencia">
-    <img src="icons/bolt.svg" alt="Cadence Icon" />
-  </button>
-</div>
+    <!-- Frecuencia Cardíaca -->
+    <div class="sensor-block">
+      <h2>❤️ FC</h2>
+      <div id="hr-display" class="value">--</div>
+      <button class="icon-button" id="hrConnectBtn" title="Conectar Banda">
+        <img src="icons/heart.svg" alt="HR Icon" />
+      </button>
+    </div>
 
-<div class="sensor-block">
-  <h2>🚴‍♂️ / 🏃‍♂️ Velocidad</h2>
-  <div id="speed" class="value">--</div>
-  <button class="icon-button" id="speedModeBtn" title="Cambiar Modo">
-    <img id="speedModeIcon" src="icons/bike.svg" alt="Modo Bicicleta" />
-  </button>
-</div>
+    <!-- Potencia -->
+    <div class="sensor-block">
+      <h2>⚡ Potencia</h2>
+      <div id="power" class="value">--</div>
+      <button class="icon-button" id="powerConnectBtn" title="Conectar Potencia">
+        <img src="icons/bolt.svg" alt="Power Icon" />
+      </button>
+    </div>
 
-<div class="sensor-block">
-  <h2>📍 Velocidad</h2>
-  <div id="gps-speed" class="value">--</div>
-</div>
+    <!-- Cadencia -->
+    <div class="sensor-block">
+      <h2>⚡ Cadencia</h2>
+      <div id="rpm" class="value">--</div>
+      <button class="icon-button" id="rpmConnectBtn" title="Conectar Cadencia">
+        <img src="icons/bolt.svg" alt="Cadence Icon" />
+      </button>
+    </div>
 
-<div class="sensor-block">
-  <h2>🛣️ Distancia</h2>
-  <div id="gps-distance" class="value">--</div>
-</div>
+    <!-- Velocidad -->
+    <div class="sensor-block">
+      <h2>🚴‍♂️ / 🏃‍♂️ Velocidad</h2>
+      <div id="gps-speed" class="value">--</div>
+      <button class="icon-button" id="speedModeBtn" title="Cambiar Modo">
+        <img id="speedModeIcon" src="icons/bike.svg" alt="Modo Bicicleta" />
+      </button>
+    </div>
 
-<!-- Versiones -->
-<div class="version-section">
-  <a href="#" id="version-link">v0.9</a>
-  <div id="changelog" style="display: none;">
-    <ul>
-      <li>v0.9 - Pantalla siempre activa</li>
-      <li>v0.8 - Historial y timestamp</li>
-      <li>v0.7 - Implementando Firebase</li>
-      <li>v0.6 - Velocidad e Distancia</li>
-      <li>v0.5 - Agregado sensor de Cadencia</li>
-      <li>v0.4 - Botones conectados en verde</li>
-      <li>v0.3 - Grilla UI y versionado</li>
-      <li>v0.2 - Agregado sensor de potencia</li>
-      <li>v0.1 - Conexión con banda HR</li>
-    </ul>
+    <!-- Distancia -->
+    <div class="sensor-block">
+      <h2>🛣️ Distancia</h2>
+      <div id="gps-distance" class="value">--</div>
+    </div>
+
   </div>
-</div>
 
-<!-- Indicador externo opcional -->
-<div id="recording-indicator" style="display: none;" class="recording">
-  🔴 Grabando sesión...
-</div>
+  <!-- Historial (fuera de la grilla) -->
+  <div class="sensor-block" id="session-history" style="margin: 1rem;">
+    <h2>🧾 Historial</h2>
+    <ul id="session-list" class="session-grid"></ul>
+  </div>
 
+  <!-- Versiones -->
+  <div class="version-section">
+    <a href="#" id="version-link">v1.0</a>
+    <div id="changelog" style="display: none;">
+      <ul>
+        <li>v1.0 - Grilla con 2 columnas</li>
+        <li>v0.9 - Pantalla siempre activa</li>
+        <li>v0.8 - Historial y timestamp</li>
+        <li>v0.7 - Implementando Firebase</li>
+        <li>v0.6 - Velocidad e Distancia</li>
+        <li>v0.5 - Agregado sensor de Cadencia</li>
+        <li>v0.4 - Botones conectados en verde</li>
+        <li>v0.3 - Grilla UI y versionado</li>
+        <li>v0.2 - Agregado sensor de potencia</li>
+        <li>v0.1 - Conexión con banda HR</li>
+      </ul>
+    </div>
+  </div>
 
-<script type="module" src="js/main.js"></script>
+  <!-- Indicador de grabación -->
+  <div id="recording-indicator" style="display: none;" class="recording">
+    🔴 Grabando sesión...
+  </div>
+
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>

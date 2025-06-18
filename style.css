@@ -4,7 +4,7 @@ body {
   font-family: Arial, sans-serif;
   margin: 0;
   padding: 1rem;
-  height: 100vh;
+  height: 95vh;
   overflow: hidden; /* evita el scroll */
   display: flex;
   flex-direction: column;
@@ -13,22 +13,24 @@ body {
 .grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr); /* SIEMPRE 2 columnas */
-  gap: 1rem;
-  padding: 1rem;
-  max-width: 800px;
+  gap: 0.5rem;
+  padding: 0.1rem;
+  max-width: auto;
+  max-height: auto;
   margin: 0 auto;
   flex: 1;
-  overflow-y: auto; /* permite scroll interno si es necesario */
+  overflow-y:auto; /* permite scroll interno si es necesario */
 }
 
 
 .sensor-block {
   background-color: #111;
-  padding: 1rem;
-  border: 1px solid #333;
+  /* padding: 1rem; */
+  border: 1.5px solid #333;
   border-radius: 12px;
   text-align: center;
   transition: background 0.3s ease;
+
 }
 
 .session-time {
@@ -60,23 +62,23 @@ body {
 }
 
 .icon-button img {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
 }
 
 #startStopBtn {
   width: 100%;
-  max-width: 380px; /* Opcional: límite para pantallas grandes */
-  height: 60px;
+  max-width: auto; /* Opcional: límite para pantallas grandes */
+  height: auto;
   font-size: 1.2rem; /* También podés aumentar el texto */
   display: block;
-  margin: 1rem auto;
-  margin-bottom: 1rem;
+  margin: auto;
+  margin-bottom: 0.5rem;
   background-color: #36aa00;
   border: none;
   color: white;
   font-weight: bold;
-  padding: 0.75rem 1.5rem;
+  padding: 0.75rem 0.75rem;
   border-radius: 10px;
   font-size: 1.2rem;
   position: relative;
@@ -98,7 +100,7 @@ body {
 }
 
 .version-section {
-  margin-top: 2rem;
+  margin-top: 1rem;
   font-size: 0.85rem;
   text-align: center;
   color: #888;

@@ -171,6 +171,13 @@ function startHoldToStop() {
       releaseWakeLock();
       updateButtonUI();
       console.log("Sesión detenida.");
+
+      // Deshabilitar botón por 2 segundos para evitar que se reinicie al soltar
+      startStopBtn.disabled = true;
+      setTimeout(() => {
+        startStopBtn.disabled = false;
+      }, 2000);
+      
     }, 1500);
   }
 }

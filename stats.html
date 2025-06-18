@@ -6,70 +6,119 @@
   <title>Resumen de Sesión</title>
   <link rel="stylesheet" href="style.css" />
   <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
     body {
       background-color: #000;
       color: #fff;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      padding: 1rem;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      overflow-y: auto;
     }
-    
-    h1 {
-      text-align: center;
-      margin-bottom: 1.5rem;
-      font-size: 1.8rem;
+    .top-bar {
+      width: 100%;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 1rem 0.5rem 0.5rem 0.5rem;
+      background: transparent;
+      z-index: 10;
+    }
+    .back-btn {
+      background-color: #36aa00;
+      border-color: #36aa00;
+      color: #fff;
       font-weight: 600;
+      border-radius: 8px;
+      padding: 0.7rem 1.2rem;
+      font-size: 1rem;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 2px 8px #0002;
+      transition: background 0.2s;
+    }
+    .back-btn:hover {
+      background-color: #2d8a00;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 0 1rem 0;
+      border-bottom: 1.5px solid #222;
+      background: transparent;
+      gap: 0.5rem;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      color: #aaa;
+      font-size: 1.1rem;
+      font-weight: 600;
+      padding: 0.7rem 1.5rem 0.7rem 1.5rem;
+      cursor: pointer;
+      border-radius: 8px 8px 0 0;
+      transition: color 0.2s, background 0.2s;
+      outline: none;
+    }
+    .tab-btn.active {
       color: #36aa00;
+      background: #111;
+      border-bottom: 2.5px solid #36aa00;
+      z-index: 2;
     }
-    
+    .tab-content { display: none; width: 100%; }
+    .tab-content.active { display: block; }
+
     .summary {
+      flex: 1 1 auto;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(2, 1fr);
       gap: 1rem;
-      flex-grow: 1;
-      margin-bottom: 1rem;
+      padding: 1rem;
+      width: 100%;
+      box-sizing: border-box;
+      overflow-y: auto;
     }
-    
     .summary-block {
       border: 1px solid #333;
-      padding: 1.5rem;
+      padding: 1.2rem 1rem;
       border-radius: 12px;
       background: linear-gradient(145deg, #111, #1a1a1a);
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      transition: transform 0.2s, box-shadow 0.2s;
+      min-width: 0;
     }
-    
-    .summary-block:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-    }
-    
     .summary-block h2 {
       margin: 0 0 1rem 0;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       font-weight: 600;
       color: #36aa00;
       text-align: center;
     }
-    
     .value {
-      font-size: 2.5rem;
+      font-size: 2.1rem;
       font-weight: 700;
       text-align: center;
       margin: 0.5rem 0;
       color: #fff;
     }
-    
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: 1fr 1fr 1fr;
       gap: 0.5rem;
       margin-top: 1rem;
     }
-    
     .stat-item {
       display: flex;
       flex-direction: column;
@@ -80,7 +129,6 @@
       border-radius: 8px;
       border: 1px solid rgba(54, 170, 0, 0.3);
     }
-    
     .stat-label {
       font-size: 0.75rem;
       color: #888;
@@ -89,24 +137,23 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
-    
     .stat-value {
       font-size: 1.1rem;
       font-weight: 600;
       color: #fff;
     }
-    
     .buttons {
       display: flex;
       gap: 1rem;
       justify-content: center;
       flex-wrap: wrap;
-      margin-top: 1.5rem;
-      padding: 1rem;
+      margin: 1.5rem 0 1rem 0;
+      padding: 0.5rem;
       background-color: rgba(255, 255, 255, 0.05);
       border-radius: 12px;
+      width: 100%;
+      box-sizing: border-box;
     }
-    
     button {
       padding: 0.75rem 1.5rem;
       font-size: 0.9rem;
@@ -119,23 +166,11 @@
       font-weight: 500;
       min-width: 120px;
     }
-    
     button:hover {
       background-color: #444;
       transform: translateY(-1px);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
-    
-    .back-btn {
-      background-color: #36aa00;
-      border-color: #36aa00;
-    }
-    
-    .back-btn:hover {
-      background-color: #2d8a00;
-      border-color: #2d8a00;
-    }
-    
     .loading {
       text-align: center;
       padding: 3rem;
@@ -143,128 +178,191 @@
       color: #888;
       grid-column: 1 / -1;
     }
-    
-    /* Responsive Design */
-    @media (max-width: 768px) {
-      body {
+    .stat-main-value {
+      font-size: 2.1rem;
+      font-weight: 700;
+      color: #fff;
+      text-align: center;
+      margin-bottom: 0.3rem;
+      line-height: 1.1;
+    }
+    .stat-unit {
+      font-size: 1.1rem;
+      color: #36aa00;
+      font-weight: 600;
+      margin-left: 0.2em;
+    }
+    .stat-minmax-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.95rem;
+      color: #aaa;
+      margin-top: 0.1rem;
+      gap: 1.5rem;
+    }
+    .stat-min, .stat-max {
+      font-size: 0.95em;
+      font-weight: 400;
+      color: #aaa;
+    }
+    .stat-min b, .stat-max b {
+      color: #fff;
+      font-weight: 600;
+      font-size: 1em;
+    }
+    .charts-container {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+      padding: 1.5rem 0.5rem 2rem 0.5rem;
+    }
+    .chart-block {
+      background: #111;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px #0003;
+      padding: 1.2rem 0.7rem 1.5rem 0.7rem;
+      margin-bottom: 0.5rem;
+    }
+    .chart-title {
+      color: #36aa00;
+      font-size: 1.1rem;
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+    @media (max-width: 700px) {
+      .summary {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.7rem;
         padding: 0.5rem;
       }
-      
-      h1 {
-        font-size: 1.5rem;
-        margin-bottom: 1rem;
-      }
-      
-      .summary {
-        grid-template-columns: 1fr;
-        gap: 0.75rem;
-      }
-      
       .summary-block {
-        padding: 1rem;
+        padding: 0.8rem 0.5rem;
       }
-      
-      .summary-block h2 {
-        font-size: 1.1rem;
-      }
-      
       .value {
-        font-size: 2rem;
+        font-size: 1.5rem;
       }
-      
       .stats-grid {
         grid-template-columns: 1fr;
-        gap: 0.75rem;
       }
-      
-      .stat-item {
-        flex-direction: row;
-        justify-content: space-between;
-        padding: 0.75rem;
-      }
-      
-      .stat-label {
-        font-size: 0.8rem;
-        margin-bottom: 0;
-      }
-      
-      .stat-value {
-        font-size: 1rem;
-      }
-      
-      .buttons {
-        flex-direction: column;
-        align-items: center;
-        gap: 0.75rem;
-      }
-      
-      button {
-        width: 100%;
-        max-width: 250px;
-        padding: 1rem;
-        font-size: 1rem;
-      }
+      .stat-main-value { font-size: 1.3rem; }
+      .stat-minmax-row { font-size: 0.85rem; gap: 0.7rem; }
+      .charts-container { padding: 0.5rem 0.2rem 1rem 0.2rem; }
     }
-    
     @media (max-width: 480px) {
+      .summary {
+        grid-template-columns: 1fr;
+        gap: 0.6rem;
+        padding: 0.3rem;
+      }
       .summary-block {
-        padding: 0.75rem;
+        padding: 0.7rem 0.3rem;
       }
-      
       .value {
-        font-size: 1.8rem;
+        font-size: 1.2rem;
       }
-      
-      .stat-item {
-        padding: 0.5rem;
-      }
-      
-      .stat-label {
-        font-size: 0.7rem;
-      }
-      
-      .stat-value {
-        font-size: 0.9rem;
-      }
+      .stat-main-value { font-size: 1.1rem; }
+      .stat-minmax-row { font-size: 0.8rem; gap: 0.5rem; }
+      .charts-container { padding: 0.2rem 0.1rem 0.5rem 0.1rem; }
     }
-    
-    /* Animaciones */
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-    
-    .summary-block {
-      animation: fadeIn 0.5s ease forwards;
-    }
-    
-    .summary-block:nth-child(1) { animation-delay: 0.1s; }
-    .summary-block:nth-child(2) { animation-delay: 0.2s; }
-    .summary-block:nth-child(3) { animation-delay: 0.3s; }
-    .summary-block:nth-child(4) { animation-delay: 0.4s; }
-    .summary-block:nth-child(5) { animation-delay: 0.5s; }
-    .summary-block:nth-child(6) { animation-delay: 0.6s; }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <h1>📊 Resumen de la sesión</h1>
-  <div class="summary" id="summary">
-    <div class="loading">Cargando datos de la sesión...</div>
+  <div class="top-bar">
+    <button class="back-btn" onclick="window.location.href='index.html'">🏠 Volver al entrenamiento</button>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn active" id="tabResultados">Resultados</button>
+    <button class="tab-btn" id="tabGraficos">Gráficos</button>
+  </div>
+  <div class="tab-content active" id="tab-content-resultados">
+    <div class="summary" id="summary">
+      <div class="loading">Cargando datos de la sesión...</div>
+    </div>
+  </div>
+  <div class="tab-content" id="tab-content-graficos">
+    <div class="charts-container" id="charts-container">
+      <div class="loading">Cargando gráficos...</div>
+    </div>
   </div>
   <div class="buttons">
-    <button class="back-btn" onclick="window.location.href='index.html'">🏠 Volver al entrenamiento</button>
-    <button onclick="window.location.href='test-firebase.html'">🧪 Test Firebase</button>
-    <button onclick="window.location.href='test-stats.html'">📊 Test Estadísticas</button>
+    <!--<button onclick="window.location.href='test-firebase.html'">🧪 Test Firebase</button>
+    <button onclick="window.location.href='test-stats.html'">📊 Test Estadísticas</button> -->
     <button onclick="shareSummary()">📤 Compartir</button>
     <button onclick="downloadCSV()">📄 Descargar CSV</button>
   </div>
-
   <script type="module" src="js/stats.js"></script>
+  <script>
+    // Tabs logic
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabBtns.forEach((btn, idx) => {
+      btn.addEventListener('click', () => {
+        tabBtns.forEach(b => b.classList.remove('active'));
+        tabContents.forEach(tc => tc.classList.remove('active'));
+        btn.classList.add('active');
+        tabContents[idx].classList.add('active');
+      });
+    });
+  </script>
+  <script>
+    // Chart.js rendering logic (waits for stats.js to load data)
+    window.renderSessionCharts = function(sessionData) {
+      const container = document.getElementById('charts-container');
+      container.innerHTML = '';
+      const chartVars = [
+        { key: 'bpm', label: 'Frecuencia Cardíaca (bpm)', color: '#e74c3c' },
+        { key: 'power', label: 'Potencia (W)', color: '#f1c40f' },
+        { key: 'rpm', label: 'Cadencia (rpm)', color: '#36aa00' },
+        { key: 'speed', label: 'Velocidad (km/h)', color: '#3498db' }
+      ];
+      let hasData = false;
+      chartVars.forEach(({key, label, color}) => {
+        const arr = sessionData[key]?.values || [];
+        if (arr.length > 1) hasData = true;
+        const block = document.createElement('div');
+        block.className = 'chart-block';
+        block.innerHTML = `<div class='chart-title'>${label}</div><canvas id='chart-${key}' height='120'></canvas>`;
+        container.appendChild(block);
+        if (arr.length > 1) {
+          new Chart(document.getElementById(`chart-${key}`), {
+            type: 'line',
+            data: {
+              labels: arr.map((_,i) => i+1),
+              datasets: [{
+                label: label,
+                data: arr,
+                borderColor: color,
+                backgroundColor: color+'22',
+                tension: 0.25,
+                pointRadius: 0,
+                borderWidth: 2.5,
+                fill: true
+              }]
+            },
+            options: {
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { display: false },
+                y: { beginAtZero: true, ticks: { color: '#aaa' }, grid: { color: '#222' } }
+              },
+              responsive: true,
+              maintainAspectRatio: false,
+            }
+          });
+        } else {
+          block.querySelector('canvas').remove();
+          block.innerHTML += `<div style='color:#888;text-align:center;font-size:1rem;padding:1.5rem 0;'>No hay datos suficientes para graficar</div>`;
+        }
+      });
+      if (!hasData) {
+        container.innerHTML = `<div class='loading'>No hay datos suficientes para graficar esta sesión.</div>`;
+      }
+    }
+  </script>
 </body>
 </html>

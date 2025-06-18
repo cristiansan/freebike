@@ -17,8 +17,75 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FreeBike</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Splash styles */
+    #splash {
+      position: fixed;
+      z-index: 9999;
+      top: 0; left: 0; right: 0; bottom: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.6s cubic-bezier(.4,0,.2,1);
+      opacity: 1;
+      pointer-events: all;
+    }
+    #splash.hide {
+      opacity: 0;
+      pointer-events: none;
+    }
+    #splash-logo {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 2rem;
+      border-radius: 24px;
+      box-shadow: 0 8px 32px #36aa0055;
+      background: #fff1;
+      object-fit: contain;
+      animation: splash-pop 1.2s cubic-bezier(.4,0,.2,1);
+    }
+    @keyframes splash-pop {
+      0% { transform: scale(0.7); opacity: 0; }
+      60% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    #splash-title {
+      font-size: 2.2rem;
+      font-weight: bold;
+      color: #36aa00;
+      letter-spacing: 2px;
+      margin-bottom: 1.5rem;
+      text-shadow: 0 2px 8px #000a;
+      text-align: center;
+    }
+    #splash-version {
+      position: absolute;
+      bottom: 2.5rem;
+      left: 0; right: 0;
+      text-align: center;
+      color: #888;
+      font-size: 1.1rem;
+      letter-spacing: 1px;
+      opacity: 0.8;
+    }
+    @media (max-width: 600px) {
+      #splash-logo { width: 80px; height: 80px; }
+      #splash-title { font-size: 1.4rem; }
+      #splash-version { font-size: 0.95rem; bottom: 1.2rem; }
+    }
+  </style>
 </head>
 <body>
+  <!-- Splash Screen -->
+  <div id="splash">
+    <img id="splash-logo" src="icons/bike-icon.png" alt="Logo Free Bike" />
+    <div id="splash-title">Free Bike</div>
+    <div id="splash-version">v1.1</div>
+  </div>
 
   <!-- Botón Start / Grabando / Pausa / Stop -->
   <button class="icon-button" id="startStopBtn" title="Iniciar Grabación" 
@@ -122,5 +189,16 @@
   </div>
 
   <script type="module" src="js/main.js"></script>
+  <script>
+    // Ocultar splash automáticamente
+    window.addEventListener('DOMContentLoaded', function() {
+      setTimeout(function() {
+        document.getElementById('splash').classList.add('hide');
+        setTimeout(function() {
+          document.getElementById('splash').style.display = 'none';
+        }, 700);
+      }, 1800); // Puedes ajustar el tiempo (milisegundos)
+    });
+  </script>
 </body>
 </html>

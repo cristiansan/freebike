@@ -32,8 +32,8 @@ window.holdTriggered = false;
 const startStopBtn = document.getElementById('startStopBtn');
 holdTriggered = false;
 startStopBtn.classList.remove('holding', 'paused', 'recording');
-isRecording = false;
-isPaused = false;
+window.isRecording = false;
+window.isPaused = false;
 updateButtonUI();
 
 

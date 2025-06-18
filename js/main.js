@@ -6,18 +6,18 @@ import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/fir
 setupUI(connectHR, connectPower, connectRPM);
 startGPS(); // Activa el GPS al iniciar
 
-let isRecording = false;
-let isPaused = false;
-let holdTimeout = null;
-let holdTriggered = false;
-let startTime = null;
-let pauseStart = null;
-let pausedDuration = 0;
-let timeInterval = null;
-let wakeLock = null;
+window.isRecording = false;
+window.isPaused = false;
+window.holdTimeout = null;
+window.holdTriggered = false;
+window.startTime = null;
+window.pauseStart = null;
+window.pausedDuration = 0;
+window.timeInterval = null;
+window.wakeLock = null;
 
 // Variables para estadísticas acumuladas
-let sessionStats = {
+typeof window.sessionStats === 'undefined' && (window.sessionStats = {
   bpm: { values: [], sum: 0, min: null, max: null },
   power: { values: [], sum: 0, min: null, max: null },
   rpm: { values: [], sum: 0, min: null, max: null },
@@ -25,7 +25,7 @@ let sessionStats = {
   distance: 0,
   startTime: null,
   endTime: null
-};
+});
 
 const startStopBtn = document.getElementById('startStopBtn');
 const startStopLabel = document.getElementById('startStopLabel');
@@ -82,13 +82,15 @@ function updateElapsedTime() {
 // --- Guardar sesión en Firebase ---
 async function saveSession(data) {
   try {
+    console.log("Intentando guardar sesión en Firebase...");
     const docRef = await addDoc(collection(db, "sesiones"), {
       ...data,
       createdAt: serverTimestamp()
     });
-    console.log("Sesión guardada con ID:", docRef.id);
+    console.log("✅ Sesión guardada exitosamente con ID:", docRef.id);
   } catch (e) {
-    console.error("Error al guardar sesión:", e);
+    console.error("❌ Error al guardar sesión:", e);
+    console.error("Datos que se intentaron guardar:", data);
   }
 }
 
@@ -130,10 +132,10 @@ function guardarSesionActual() {
 
 // --- UI del botón ---
 function updateButtonUI() {
-  if (!isRecording) {
+  if (!window.isRecording) {
     startStopLabel.textContent = "▶️ Start";
     startStopBtn.classList.remove("recording", "paused", "holding");
-  } else if (isPaused) {
+  } else if (window.isPaused) {
     startStopLabel.textContent = "⏸️ HOLD TO STOP";
     startStopBtn.classList.remove("recording");
     startStopBtn.classList.add("paused");
@@ -143,41 +145,42 @@ function updateButtonUI() {
     startStopBtn.classList.remove("paused", "holding");
   }
 }
+window.updateButtonUI = updateButtonUI;
 
 // --- Click corto: Start / Pause / Resume ---
 function handleClick() {
   if (holdTriggered) return;
 
-  if (!isRecording) {
-    isRecording = true;
-    isPaused = false;
-    startTime = new Date();
-    pausedDuration = 0;
+  if (!window.isRecording) {
+    window.isRecording = true;
+    window.isPaused = false;
+    window.startTime = new Date();
+    window.pausedDuration = 0;
     
     // Inicializar estadísticas de sesión
-    sessionStats = {
+    window.sessionStats = {
       bpm: { values: [], sum: 0, min: null, max: null },
       power: { values: [], sum: 0, min: null, max: null },
       rpm: { values: [], sum: 0, min: null, max: null },
       speed: { values: [], sum: 0, min: null, max: null },
       distance: 0,
-      startTime: startTime,
+      startTime: window.startTime,
       endTime: null
     };
     
-    timeInterval = setInterval(updateElapsedTime, 1000);
+    window.timeInterval = setInterval(updateElapsedTime, 1000);
     updateElapsedTime();
     requestWakeLock();
     guardarSesionActual();
     launchFullscreen(); // ⬅️ Entrar en pantalla completa al comenzar
-  } else if (!isPaused) {
-    isPaused = true;
-    pauseStart = new Date();
+  } else if (!window.isPaused) {
+    window.isPaused = true;
+    window.pauseStart = new Date();
   } else {
-    isPaused = false;
-    if (pauseStart) {
-      pausedDuration += new Date() - pauseStart;
-      pauseStart = null;
+    window.isPaused = false;
+    if (window.pauseStart) {
+      window.pausedDuration += new Date() - window.pauseStart;
+      window.pauseStart = null;
     }
   }
 
@@ -185,68 +188,82 @@ function handleClick() {
 }
 
 // --- Hold largo: detener grabación ---
-function startHoldToStop() {
-  if (isRecording && isPaused) {
-    holdTriggered = false;
+async function startHoldToStop() {
+  if (window.isRecording && window.isPaused) {
+    window.holdTriggered = false;
     startStopBtn.classList.add('holding');
-    holdTimeout = setTimeout(() => {
-      holdTriggered = true;
-      isRecording = false;
-      isPaused = false;
+    window.holdTimeout = setTimeout(async () => {
+      window.holdTriggered = true;
+      window.isRecording = false;
+      window.isPaused = false;
       
       // Guardar estadísticas finales
-      sessionStats.endTime = new Date();
+      window.sessionStats.endTime = new Date();
+      
+      // Limitar el tamaño de los arrays para evitar problemas de Firebase
+      const maxArraySize = 100; // Máximo 100 valores por array
+      
       const finalStats = {
         // Tiempo transcurrido
         elapsedTime: getElapsedTimeMs(),
         
         // Distancia
-        distance: sessionStats.distance,
+        distance: window.sessionStats.distance,
         
         // FC promedio, mínima y máxima
         bpm: {
-          avg: sessionStats.bpm.values.length > 0 ? Math.round(sessionStats.bpm.sum / sessionStats.bpm.values.length) : 0,
-          min: sessionStats.bpm.min || 0,
-          max: sessionStats.bpm.max || 0,
-          count: sessionStats.bpm.values.length
+          avg: window.sessionStats.bpm.values.length > 0 ? Math.round(window.sessionStats.bpm.sum / window.sessionStats.bpm.values.length) : 0,
+          min: window.sessionStats.bpm.min || 0,
+          max: window.sessionStats.bpm.max || 0,
+          count: window.sessionStats.bpm.values.length,
+          values: window.sessionStats.bpm.values.slice(-maxArraySize) // Solo los últimos 100 valores
         },
         
         // Potencia promedio, mínima y máxima
         power: {
-          avg: sessionStats.power.values.length > 0 ? Math.round(sessionStats.power.sum / sessionStats.power.values.length) : 0,
-          min: sessionStats.power.min || 0,
-          max: sessionStats.power.max || 0,
-          count: sessionStats.power.values.length
+          avg: window.sessionStats.power.values.length > 0 ? Math.round(window.sessionStats.power.sum / window.sessionStats.power.values.length) : 0,
+          min: window.sessionStats.power.min || 0,
+          max: window.sessionStats.power.max || 0,
+          count: window.sessionStats.power.values.length,
+          values: window.sessionStats.power.values.slice(-maxArraySize)
         },
         
         // Cadencia promedio, mínima y máxima
         rpm: {
-          avg: sessionStats.rpm.values.length > 0 ? Math.round(sessionStats.rpm.sum / sessionStats.rpm.values.length) : 0,
-          min: sessionStats.rpm.min || 0,
-          max: sessionStats.rpm.max || 0,
-          count: sessionStats.rpm.values.length
+          avg: window.sessionStats.rpm.values.length > 0 ? Math.round(window.sessionStats.rpm.sum / window.sessionStats.rpm.values.length) : 0,
+          min: window.sessionStats.rpm.min || 0,
+          max: window.sessionStats.rpm.max || 0,
+          count: window.sessionStats.rpm.values.length,
+          values: window.sessionStats.rpm.values.slice(-maxArraySize)
         },
         
         // Velocidad promedio, mínima y máxima
         speed: {
-          avg: sessionStats.speed.values.length > 0 ? Math.round(sessionStats.speed.sum / sessionStats.speed.values.length * 10) / 10 : 0,
-          min: sessionStats.speed.min || 0,
-          max: sessionStats.speed.max || 0,
-          count: sessionStats.speed.values.length
+          avg: window.sessionStats.speed.values.length > 0 ? Math.round(window.sessionStats.speed.sum / window.sessionStats.speed.values.length * 10) / 10 : 0,
+          min: window.sessionStats.speed.min || 0,
+          max: window.sessionStats.speed.max || 0,
+          count: window.sessionStats.speed.values.length,
+          values: window.sessionStats.speed.values.slice(-maxArraySize)
         },
         
-        startTime: sessionStats.startTime,
-        endTime: sessionStats.endTime
+        startTime: window.sessionStats.startTime,
+        endTime: window.sessionStats.endTime
       };
       
-      console.log("Estadísticas finales:", finalStats);
-      saveSession(finalStats);
+      console.log("BPM values:", window.sessionStats.bpm.values);
+      console.log("POWER values:", window.sessionStats.power.values);
+      console.log("RPM values:", window.sessionStats.rpm.values);
+      console.log("SPEED values:", window.sessionStats.speed.values);
+      console.log("Final stats a guardar:", finalStats);
+      
+      // Guardar la sesión
+      await saveSession(finalStats);
       
       // Resetear variables
-      startTime = null;
-      pauseStart = null;
-      pausedDuration = 0;
-      clearInterval(timeInterval);
+      window.startTime = null;
+      window.pauseStart = null;
+      window.pausedDuration = 0;
+      clearInterval(window.timeInterval);
       sessionTimeDisplay.textContent = "⏱ 00:00";
       releaseWakeLock();
       updateButtonUI();
@@ -267,9 +284,9 @@ function startHoldToStop() {
 }
 
 function cancelHoldToStop() {
-  if (holdTimeout) {
-    clearTimeout(holdTimeout);
-    holdTimeout = null;
+  if (window.holdTimeout) {
+    clearTimeout(window.holdTimeout);
+    window.holdTimeout = null;
   }
   startStopBtn.classList.remove('holding');
 }
@@ -285,23 +302,19 @@ startStopBtn.addEventListener('touchcancel', cancelHoldToStop);
 
 // Función para actualizar estadísticas
 function updateSessionStats(type, value) {
-  if (!isRecording || isPaused || value === null || value === undefined || value === 0) return;
-  
-  if (sessionStats[type]) {
-    sessionStats[type].values.push(value);
-    sessionStats[type].sum += value;
-    
-    if (sessionStats[type].min === null || value < sessionStats[type].min) {
-      sessionStats[type].min = value;
+  if (!window.isRecording || window.isPaused || value === null || value === undefined || value === 0) return;
+  if (window.sessionStats[type]) {
+    window.sessionStats[type].values = window.sessionStats[type].values || [];
+    window.sessionStats[type].values.push(value);
+    window.sessionStats[type].sum += value;
+    if (window.sessionStats[type].min === null || value < window.sessionStats[type].min) {
+      window.sessionStats[type].min = value;
     }
-    if (sessionStats[type].max === null || value > sessionStats[type].max) {
-      sessionStats[type].max = value;
+    if (window.sessionStats[type].max === null || value > window.sessionStats[type].max) {
+      window.sessionStats[type].max = value;
     }
   }
 }
 
 // Exponer la función globalmente para que ui.js pueda usarla
 window.updateSessionStats = updateSessionStats;
-
-// Exponer sessionStats globalmente para que app.js pueda acceder a él
-window.sessionStats = sessionStats;

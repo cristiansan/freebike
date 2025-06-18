@@ -201,6 +201,15 @@ export function startGPS() {
 
           if (speedElement) speedElement.textContent = (speed * 3.6).toFixed(1) + ' km/h';
           if (distanceElement) distanceElement.textContent = (totalDistance / 1000).toFixed(2) + ' km';
+          
+          // Actualizar estadísticas de la sesión si existe la función
+          if (window.updateSessionStats) {
+            window.updateSessionStats('speed', speed * 3.6); // Convertir a km/h
+            // Actualizar distancia en las estadísticas de la sesión
+            if (window.sessionStats) {
+              window.sessionStats.distance = totalDistance / 1000; // Convertir a km
+            }
+          }
         }
       }
 

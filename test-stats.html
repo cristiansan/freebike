@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Test Estadísticas</title>
+  <style>
+    body {
+      background-color: #000;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+    }
+    .test-section {
+      margin: 1rem 0;
+      padding: 1rem;
+      border: 1px solid #333;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #36aa00;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 0.5rem;
+    }
+    button:hover {
+      background-color: #2d8a00;
+    }
+    .log {
+      background-color: #111;
+      padding: 1rem;
+      border-radius: 5px;
+      margin: 1rem 0;
+      font-family: monospace;
+      white-space: pre-wrap;
+    }
+    .stats-display {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    .stat-card {
+      background-color: #111;
+      padding: 1rem;
+      border-radius: 5px;
+      border: 1px solid #333;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧪 Test Estadísticas</h1>
+  
+  <div class="test-section">
+    <h2>Simular datos de sesión</h2>
+    <button onclick="simulateSession()">🎯 Simular sesión completa</button>
+    <button onclick="addRandomData()">🎲 Agregar datos aleatorios</button>
+    <button onclick="viewCurrentStats()">📊 Ver estadísticas actuales</button>
+    <button onclick="clearLog()">🗑️ Limpiar log</button>
+  </div>
+
+  <div class="test-section">
+    <h2>Estadísticas actuales</h2>
+    <div id="stats-display" class="stats-display"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>Log de resultados</h2>
+    <div id="log" class="log"></div>
+  </div>
+
+  <script type="module">
+    import { db } from './js/firebase.js';
+    import { collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
+
+    // Simular las variables globales que estarían en main.js
+    window.sessionStats = {
+      bpm: { values: [], sum: 0, min: null, max: null },
+      power: { values: [], sum: 0, min: null, max: null },
+      rpm: { values: [], sum: 0, min: null, max: null },
+      speed: { values: [], sum: 0, min: null, max: null },
+      distance: 0,
+      startTime: new Date(),
+      endTime: null
+    };
+
+    window.isRecording = true;
+    window.isPaused = false;
+
+    function log(message) {
+      const logElement = document.getElementById('log');
+      const timestamp = new Date().toLocaleTimeString();
+      logElement.textContent += `[${timestamp}] ${message}\n`;
+      logElement.scrollTop = logElement.scrollHeight;
+    }
+
+    function updateSessionStats(type, value) {
+      if (!window.isRecording || window.isPaused || value === null || value === undefined || value === 0) return;
+      
+      if (window.sessionStats[type]) {
+        window.sessionStats[type].values.push(value);
+        window.sessionStats[type].sum += value;
+        
+        if (window.sessionStats[type].min === null || value < window.sessionStats[type].min) {
+          window.sessionStats[type].min = value;
+        }
+        if (window.sessionStats[type].max === null || value > window.sessionStats[type].max) {
+          window.sessionStats[type].max = value;
+        }
+      }
+    }
+
+    window.updateSessionStats = updateSessionStats;
+
+    window.simulateSession = async function() {
+      try {
+        log("🎯 Simulando sesión completa...");
+        
+        // Simular datos durante 30 segundos
+        const startTime = Date.now();
+        const duration = 30000; // 30 segundos
+        
+        const interval = setInterval(() => {
+          const elapsed = Date.now() - startTime;
+          if (elapsed >= duration) {
+            clearInterval(interval);
+            finishSession();
+            return;
+          }
+          
+          // Generar datos aleatorios realistas
+          const bpm = 120 + Math.random() * 60; // 120-180 bpm
+          const power = 150 + Math.random() * 200; // 150-350 W
+          const rpm = 70 + Math.random() * 40; // 70-110 rpm
+          const speed = 20 + Math.random() * 15; // 20-35 km/h
+          
+          updateSessionStats('bpm', Math.round(bpm));
+          updateSessionStats('power', Math.round(power));
+          updateSessionStats('rpm', Math.round(rpm));
+          updateSessionStats('speed', Math.round(speed * 10) / 10);
+          
+          window.sessionStats.distance = (elapsed / 1000) * 0.01; // Simular distancia
+          
+          log(`⏱ ${(elapsed/1000).toFixed(1)}s - BPM: ${Math.round(bpm)}, Power: ${Math.round(power)}W, RPM: ${Math.round(rpm)}, Speed: ${(speed).toFixed(1)} km/h`);
+        }, 1000);
+        
+      } catch (error) {
+        log(`❌ Error: ${error.message}`);
+      }
+    };
+
+    window.addRandomData = function() {
+      const bpm = 120 + Math.random() * 60;
+      const power = 150 + Math.random() * 200;
+      const rpm = 70 + Math.random() * 40;
+      const speed = 20 + Math.random() * 15;
+      
+      updateSessionStats('bpm', Math.round(bpm));
+      updateSessionStats('power', Math.round(power));
+      updateSessionStats('rpm', Math.round(rpm));
+      updateSessionStats('speed', Math.round(speed * 10) / 10);
+      
+      log(`🎲 Datos agregados - BPM: ${Math.round(bpm)}, Power: ${Math.round(power)}W, RPM: ${Math.round(rpm)}, Speed: ${(speed).toFixed(1)} km/h`);
+      viewCurrentStats();
+    };
+
+    window.viewCurrentStats = function() {
+      const stats = window.sessionStats;
+      const display = document.getElementById('stats-display');
+      
+      display.innerHTML = `
+        <div class="stat-card">
+          <h3>❤️ Frecuencia Cardíaca</h3>
+          <p>Promedio: ${stats.bpm.values.length > 0 ? Math.round(stats.bpm.sum / stats.bpm.values.length) : 0} bpm</p>
+          <p>Mínima: ${stats.bpm.min || 0} bpm</p>
+          <p>Máxima: ${stats.bpm.max || 0} bpm</p>
+          <p>Muestras: ${stats.bpm.values.length}</p>
+        </div>
+        <div class="stat-card">
+          <h3>⚡ Potencia</h3>
+          <p>Promedio: ${stats.power.values.length > 0 ? Math.round(stats.power.sum / stats.power.values.length) : 0} W</p>
+          <p>Mínima: ${stats.power.min || 0} W</p>
+          <p>Máxima: ${stats.power.max || 0} W</p>
+          <p>Muestras: ${stats.power.values.length}</p>
+        </div>
+        <div class="stat-card">
+          <h3>🔄 Cadencia</h3>
+          <p>Promedio: ${stats.rpm.values.length > 0 ? Math.round(stats.rpm.sum / stats.rpm.values.length) : 0} rpm</p>
+          <p>Mínima: ${stats.rpm.min || 0} rpm</p>
+          <p>Máxima: ${stats.rpm.max || 0} rpm</p>
+          <p>Muestras: ${stats.rpm.values.length}</p>
+        </div>
+        <div class="stat-card">
+          <h3>🚴 Velocidad</h3>
+          <p>Promedio: ${stats.speed.values.length > 0 ? Math.round(stats.speed.sum / stats.speed.values.length * 10) / 10 : 0} km/h</p>
+          <p>Mínima: ${stats.speed.min || 0} km/h</p>
+          <p>Máxima: ${stats.speed.max || 0} km/h</p>
+          <p>Muestras: ${stats.speed.values.length}</p>
+        </div>
+        <div class="stat-card">
+          <h3>🛣 Distancia</h3>
+          <p>Total: ${stats.distance.toFixed(2)} km</p>
+        </div>
+      `;
+    };
+
+    async function finishSession() {
+      try {
+        log("✅ Finalizando sesión...");
+        
+        const stats = window.sessionStats;
+        stats.endTime = new Date();
+        
+        const finalStats = {
+          elapsedTime: stats.endTime - stats.startTime,
+          distance: stats.distance,
+          bpm: {
+            avg: stats.bpm.values.length > 0 ? Math.round(stats.bpm.sum / stats.bpm.values.length) : 0,
+            min: stats.bpm.min || 0,
+            max: stats.bpm.max || 0,
+            count: stats.bpm.values.length
+          },
+          power: {
+            avg: stats.power.values.length > 0 ? Math.round(stats.power.sum / stats.power.values.length) : 0,
+            min: stats.power.min || 0,
+            max: stats.power.max || 0,
+            count: stats.power.values.length
+          },
+          rpm: {
+            avg: stats.rpm.values.length > 0 ? Math.round(stats.rpm.sum / stats.rpm.values.length) : 0,
+            min: stats.rpm.min || 0,
+            max: stats.rpm.max || 0,
+            count: stats.rpm.values.length
+          },
+          speed: {
+            avg: stats.speed.values.length > 0 ? Math.round(stats.speed.sum / stats.speed.values.length * 10) / 10 : 0,
+            min: stats.speed.min || 0,
+            max: stats.speed.max || 0,
+            count: stats.speed.values.length
+          },
+          startTime: stats.startTime,
+          endTime: stats.endTime
+        };
+        
+        log("📊 Estadísticas finales:");
+        log(JSON.stringify(finalStats, null, 2));
+        
+        const docRef = await addDoc(collection(db, "sesiones"), {
+          ...finalStats,
+          createdAt: serverTimestamp()
+        });
+        
+        log(`✅ Sesión guardada con ID: ${docRef.id}`);
+        viewCurrentStats();
+        
+      } catch (error) {
+        log(`❌ Error al guardar: ${error.message}`);
+      }
+    }
+
+    window.clearLog = function() {
+      document.getElementById('log').textContent = '';
+    };
+
+    // Auto-inicializar
+    log("🚀 Test de estadísticas iniciado");
+    viewCurrentStats();
+  </script>
+</body>
+</html> 

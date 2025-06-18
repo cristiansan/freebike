@@ -16,6 +16,17 @@ let pausedDuration = 0;
 let timeInterval = null;
 let wakeLock = null;
 
+// Variables para estadísticas acumuladas
+let sessionStats = {
+  bpm: { values: [], sum: 0, min: null, max: null },
+  power: { values: [], sum: 0, min: null, max: null },
+  rpm: { values: [], sum: 0, min: null, max: null },
+  speed: { values: [], sum: 0, min: null, max: null },
+  distance: 0,
+  startTime: null,
+  endTime: null
+};
+
 const startStopBtn = document.getElementById('startStopBtn');
 const startStopLabel = document.getElementById('startStopLabel');
 const sessionTimeDisplay = document.getElementById('session-time');
@@ -84,10 +95,7 @@ async function saveSession(data) {
 // --- Mostrar en lista ---
 function appendSessionToList(data) {
   const li = document.createElement('li');
-  const fecha = data.createdAt instanceof Date
-    ? data.createdAt
-    : new Date(data.createdAt?.seconds * 1000 || Date.now());
-
+  const fecha = new Date();
   const fechaStr = fecha.toLocaleDateString() + ' ' + fecha.toLocaleTimeString();
   li.textContent = `[${fechaStr}] FC: ${data.bpm}, Pot: ${data.power}, RPM: ${data.rpm}, Vel: ${data.speed} km/h, Dist: ${data.distance} km`;
   document.getElementById('session-list').prepend(li);
@@ -95,19 +103,29 @@ function appendSessionToList(data) {
 
 // --- Guardar datos actuales ---
 function guardarSesionActual() {
-  const now = new Date();
-  const sessionData = {
-    bpm: parseInt(document.getElementById('hr-display').textContent) || 0,
-    power: parseInt(document.getElementById('power').textContent) || 0,
-    rpm: parseInt(document.getElementById('rpm').textContent) || 0,
-    speed: parseFloat(document.getElementById('gps-speed').textContent) || 0,
-    distance: parseFloat(document.getElementById('gps-distance').textContent) || 0,
-    createdAt: now
-  };
+  const hrElement = document.getElementById('hr-display');
+  const powerElement = document.getElementById('power');
+  const rpmElement = document.getElementById('rpm');
+  const speedElement = document.getElementById('gps-speed');
+  const distanceElement = document.getElementById('gps-distance');
 
-  console.log("Datos a guardar:", sessionData);
-  saveSession(sessionData);
-  appendSessionToList(sessionData);
+  // Obtener valores actuales
+  const currentBpm = hrElement ? parseInt(hrElement.textContent.replace(/[^\d]/g, '')) || 0 : 0;
+  const currentPower = powerElement ? parseInt(powerElement.textContent.replace(/[^\d]/g, '')) || 0 : 0;
+  const currentRpm = rpmElement ? parseInt(rpmElement.textContent.replace(/[^\d]/g, '')) || 0 : 0;
+  const currentSpeed = speedElement ? parseFloat(speedElement.textContent.replace(/[^\d.]/g, '')) || 0 : 0;
+  const currentDistance = distanceElement ? parseFloat(distanceElement.textContent.replace(/[^\d.]/g, '')) || 0 : 0;
+
+  // Actualizar estadísticas acumuladas
+  updateSessionStats('bpm', currentBpm);
+  updateSessionStats('power', currentPower);
+  updateSessionStats('rpm', currentRpm);
+  updateSessionStats('speed', currentSpeed);
+  sessionStats.distance = currentDistance;
+
+  // Solo guardar al final de la sesión, no al inicio
+  // saveSession(sessionData);
+  // appendSessionToList(sessionData);
 }
 
 // --- UI del botón ---
@@ -135,6 +153,18 @@ function handleClick() {
     isPaused = false;
     startTime = new Date();
     pausedDuration = 0;
+    
+    // Inicializar estadísticas de sesión
+    sessionStats = {
+      bpm: { values: [], sum: 0, min: null, max: null },
+      power: { values: [], sum: 0, min: null, max: null },
+      rpm: { values: [], sum: 0, min: null, max: null },
+      speed: { values: [], sum: 0, min: null, max: null },
+      distance: 0,
+      startTime: startTime,
+      endTime: null
+    };
+    
     timeInterval = setInterval(updateElapsedTime, 1000);
     updateElapsedTime();
     requestWakeLock();
@@ -163,6 +193,56 @@ function startHoldToStop() {
       holdTriggered = true;
       isRecording = false;
       isPaused = false;
+      
+      // Guardar estadísticas finales
+      sessionStats.endTime = new Date();
+      const finalStats = {
+        // Tiempo transcurrido
+        elapsedTime: getElapsedTimeMs(),
+        
+        // Distancia
+        distance: sessionStats.distance,
+        
+        // FC promedio, mínima y máxima
+        bpm: {
+          avg: sessionStats.bpm.values.length > 0 ? Math.round(sessionStats.bpm.sum / sessionStats.bpm.values.length) : 0,
+          min: sessionStats.bpm.min || 0,
+          max: sessionStats.bpm.max || 0,
+          count: sessionStats.bpm.values.length
+        },
+        
+        // Potencia promedio, mínima y máxima
+        power: {
+          avg: sessionStats.power.values.length > 0 ? Math.round(sessionStats.power.sum / sessionStats.power.values.length) : 0,
+          min: sessionStats.power.min || 0,
+          max: sessionStats.power.max || 0,
+          count: sessionStats.power.values.length
+        },
+        
+        // Cadencia promedio, mínima y máxima
+        rpm: {
+          avg: sessionStats.rpm.values.length > 0 ? Math.round(sessionStats.rpm.sum / sessionStats.rpm.values.length) : 0,
+          min: sessionStats.rpm.min || 0,
+          max: sessionStats.rpm.max || 0,
+          count: sessionStats.rpm.values.length
+        },
+        
+        // Velocidad promedio, mínima y máxima
+        speed: {
+          avg: sessionStats.speed.values.length > 0 ? Math.round(sessionStats.speed.sum / sessionStats.speed.values.length * 10) / 10 : 0,
+          min: sessionStats.speed.min || 0,
+          max: sessionStats.speed.max || 0,
+          count: sessionStats.speed.values.length
+        },
+        
+        startTime: sessionStats.startTime,
+        endTime: sessionStats.endTime
+      };
+      
+      console.log("Estadísticas finales:", finalStats);
+      saveSession(finalStats);
+      
+      // Resetear variables
       startTime = null;
       pauseStart = null;
       pausedDuration = 0;
@@ -177,7 +257,11 @@ function startHoldToStop() {
       setTimeout(() => {
         startStopBtn.disabled = false;
       }, 2000);
-      
+       // Redirigir a la página de resumen
+      setTimeout(() => {
+        window.location.href = 'stats.html';
+      }, 500);
+
     }, 1500);
   }
 }
@@ -198,3 +282,26 @@ startStopBtn.addEventListener('mouseleave', cancelHoldToStop);
 startStopBtn.addEventListener('touchstart', startHoldToStop);
 startStopBtn.addEventListener('touchend', cancelHoldToStop);
 startStopBtn.addEventListener('touchcancel', cancelHoldToStop);
+
+// Función para actualizar estadísticas
+function updateSessionStats(type, value) {
+  if (!isRecording || isPaused || value === null || value === undefined || value === 0) return;
+  
+  if (sessionStats[type]) {
+    sessionStats[type].values.push(value);
+    sessionStats[type].sum += value;
+    
+    if (sessionStats[type].min === null || value < sessionStats[type].min) {
+      sessionStats[type].min = value;
+    }
+    if (sessionStats[type].max === null || value > sessionStats[type].max) {
+      sessionStats[type].max = value;
+    }
+  }
+}
+
+// Exponer la función globalmente para que ui.js pueda usarla
+window.updateSessionStats = updateSessionStats;
+
+// Exponer sessionStats globalmente para que app.js pueda acceder a él
+window.sessionStats = sessionStats;

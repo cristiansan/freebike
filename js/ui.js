@@ -47,14 +47,26 @@ export function setupUI(connectHR, connectPower, connectRPM) {
 // ----------------------
 export function updateHeartRate(value) {
   document.getElementById('hr-display').textContent = value ?? '--';
+  // Actualizar estadísticas de la sesión si existe la función
+  if (window.updateSessionStats) {
+    window.updateSessionStats('bpm', value);
+  }
 }
 
 export function updatePower(value) {
   document.getElementById('power').textContent = value ?? '--';
+  // Actualizar estadísticas de la sesión si existe la función
+  if (window.updateSessionStats) {
+    window.updateSessionStats('power', value);
+  }
 }
 
 export function updateRPM(value) {
   document.getElementById('rpm').textContent = value ?? '--';
+  // Actualizar estadísticas de la sesión si existe la función
+  if (window.updateSessionStats) {
+    window.updateSessionStats('rpm', value);
+  }
 }
 
 export function updateSpeed(mps) {
@@ -74,6 +86,11 @@ export function updateSpeed(mps) {
     }
   } else {
     elem.textContent = `${(mps * 3.6).toFixed(1)} km/h`;
+  }
+  
+  // Actualizar estadísticas de la sesión si existe la función
+  if (window.updateSessionStats) {
+    window.updateSessionStats('speed', mps * 3.6); // Convertir a km/h
   }
 }
 

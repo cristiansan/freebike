@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Resumen de Sesión</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      background-color: #000;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      padding: 1rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+    }
+    
+    h1 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: #36aa00;
+    }
+    
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+      flex-grow: 1;
+      margin-bottom: 1rem;
+    }
+    
+    .summary-block {
+      border: 1px solid #333;
+      padding: 1.5rem;
+      border-radius: 12px;
+      background: linear-gradient(145deg, #111, #1a1a1a);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .summary-block:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    }
+    
+    .summary-block h2 {
+      margin: 0 0 1rem 0;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #36aa00;
+      text-align: center;
+    }
+    
+    .value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      text-align: center;
+      margin: 0.5rem 0;
+      color: #fff;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 0.5rem;
+      background-color: rgba(54, 170, 0, 0.1);
+      border-radius: 8px;
+      border: 1px solid rgba(54, 170, 0, 0.3);
+    }
+    
+    .stat-label {
+      font-size: 0.75rem;
+      color: #888;
+      margin-bottom: 0.25rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .stat-value {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+    }
+    
+    .buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+    }
+    
+    button {
+      padding: 0.75rem 1.5rem;
+      font-size: 0.9rem;
+      background-color: #333;
+      color: #fff;
+      border: 1px solid #555;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-weight: 500;
+      min-width: 120px;
+    }
+    
+    button:hover {
+      background-color: #444;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    
+    .back-btn {
+      background-color: #36aa00;
+      border-color: #36aa00;
+    }
+    
+    .back-btn:hover {
+      background-color: #2d8a00;
+      border-color: #2d8a00;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      font-size: 1.2rem;
+      color: #888;
+      grid-column: 1 / -1;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      body {
+        padding: 0.5rem;
+      }
+      
+      h1 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+      }
+      
+      .summary {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+      }
+      
+      .summary-block {
+        padding: 1rem;
+      }
+      
+      .summary-block h2 {
+        font-size: 1.1rem;
+      }
+      
+      .value {
+        font-size: 2rem;
+      }
+      
+      .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+      }
+      
+      .stat-item {
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 0.75rem;
+      }
+      
+      .stat-label {
+        font-size: 0.8rem;
+        margin-bottom: 0;
+      }
+      
+      .stat-value {
+        font-size: 1rem;
+      }
+      
+      .buttons {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+      }
+      
+      button {
+        width: 100%;
+        max-width: 250px;
+        padding: 1rem;
+        font-size: 1rem;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .summary-block {
+        padding: 0.75rem;
+      }
+      
+      .value {
+        font-size: 1.8rem;
+      }
+      
+      .stat-item {
+        padding: 0.5rem;
+      }
+      
+      .stat-label {
+        font-size: 0.7rem;
+      }
+      
+      .stat-value {
+        font-size: 0.9rem;
+      }
+    }
+    
+    /* Animaciones */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .summary-block {
+      animation: fadeIn 0.5s ease forwards;
+    }
+    
+    .summary-block:nth-child(1) { animation-delay: 0.1s; }
+    .summary-block:nth-child(2) { animation-delay: 0.2s; }
+    .summary-block:nth-child(3) { animation-delay: 0.3s; }
+    .summary-block:nth-child(4) { animation-delay: 0.4s; }
+    .summary-block:nth-child(5) { animation-delay: 0.5s; }
+    .summary-block:nth-child(6) { animation-delay: 0.6s; }
+  </style>
+</head>
+<body>
+  <h1>📊 Resumen de la sesión</h1>
+  <div class="summary" id="summary">
+    <div class="loading">Cargando datos de la sesión...</div>
+  </div>
+  <div class="buttons">
+    <button class="back-btn" onclick="window.location.href='index.html'">🏠 Volver al entrenamiento</button>
+    <button onclick="window.location.href='test-firebase.html'">🧪 Test Firebase</button>
+    <button onclick="window.location.href='test-stats.html'">📊 Test Estadísticas</button>
+    <button onclick="shareSummary()">📤 Compartir</button>
+    <button onclick="downloadCSV()">📄 Descargar CSV</button>
+  </div>
+
+  <script type="module" src="js/stats.js"></script>
+</body>
+</html>

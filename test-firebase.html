@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Test Firebase</title>
+  <style>
+    body {
+      background-color: #000;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+    }
+    .test-section {
+      margin: 1rem 0;
+      padding: 1rem;
+      border: 1px solid #333;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #36aa00;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 0.5rem;
+    }
+    button:hover {
+      background-color: #2d8a00;
+    }
+    .log {
+      background-color: #111;
+      padding: 1rem;
+      border-radius: 5px;
+      margin: 1rem 0;
+      font-family: monospace;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧪 Test Firebase</h1>
+  
+  <div class="test-section">
+    <h2>Prueba de conexión</h2>
+    <button onclick="testConnection()">🔗 Probar conexión</button>
+    <button onclick="testWrite()">✍️ Escribir datos de prueba</button>
+    <button onclick="testRead()">📖 Leer datos</button>
+    <button onclick="clearLog()">🗑️ Limpiar log</button>
+  </div>
+
+  <div class="test-section">
+    <h2>Log de resultados</h2>
+    <div id="log" class="log"></div>
+  </div>
+
+  <script type="module">
+    import { db } from './js/firebase.js';
+    import { collection, addDoc, getDocs, serverTimestamp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
+
+    window.db = db;
+    window.collection = collection;
+    window.addDoc = addDoc;
+    window.getDocs = getDocs;
+    window.serverTimestamp = serverTimestamp;
+
+    function log(message) {
+      const logElement = document.getElementById('log');
+      const timestamp = new Date().toLocaleTimeString();
+      logElement.textContent += `[${timestamp}] ${message}\n`;
+      logElement.scrollTop = logElement.scrollHeight;
+    }
+
+    window.testConnection = async function() {
+      try {
+        log("🔗 Probando conexión a Firebase...");
+        log(`DB object: ${db ? 'OK' : 'NULL'}`);
+        
+        const testQuery = collection(db, 'test');
+        const snapshot = await getDocs(testQuery);
+        log(`✅ Conexión exitosa! Colección 'test' encontrada.`);
+        log(`📊 Documentos en 'test': ${snapshot.size}`);
+        
+      } catch (error) {
+        log(`❌ Error de conexión: ${error.message}`);
+        log(`Stack: ${error.stack}`);
+      }
+    };
+
+    window.testWrite = async function() {
+      try {
+        log("✍️ Escribiendo datos de prueba...");
+        
+        const testData = {
+          test: true,
+          message: "Datos de prueba",
+          timestamp: serverTimestamp(),
+          values: {
+            bpm: 120,
+            power: 200,
+            rpm: 85,
+            speed: 25.5,
+            distance: 10.2
+          }
+        };
+        
+        const docRef = await addDoc(collection(db, 'sesiones'), testData);
+        log(`✅ Datos escritos exitosamente! ID: ${docRef.id}`);
+        
+      } catch (error) {
+        log(`❌ Error al escribir: ${error.message}`);
+        log(`Stack: ${error.stack}`);
+      }
+    };
+
+    window.testRead = async function() {
+      try {
+        log("📖 Leyendo datos de sesiones...");
+        
+        const q = collection(db, 'sesiones');
+        const snapshot = await getDocs(q);
+        
+        log(`📊 Total de sesiones: ${snapshot.size}`);
+        
+        if (snapshot.empty) {
+          log("📭 No hay sesiones registradas");
+          return;
+        }
+        
+        snapshot.forEach((doc, index) => {
+          const data = doc.data();
+          log(`📄 Sesión ${index + 1} (ID: ${doc.id}):`);
+          log(`   - BPM: ${data.bpm || 'N/A'}`);
+          log(`   - Power: ${data.power || 'N/A'}`);
+          log(`   - RPM: ${data.rpm || 'N/A'}`);
+          log(`   - Speed: ${data.speed || 'N/A'}`);
+          log(`   - Distance: ${data.distance || 'N/A'}`);
+          log(`   - CreatedAt: ${data.createdAt ? 'Presente' : 'Ausente'}`);
+        });
+        
+      } catch (error) {
+        log(`❌ Error al leer: ${error.message}`);
+        log(`Stack: ${error.stack}`);
+      }
+    };
+
+    window.clearLog = function() {
+      document.getElementById('log').textContent = '';
+    };
+
+    // Auto-test al cargar
+    log("🚀 Iniciando test de Firebase...");
+    setTimeout(testConnection, 1000);
+  </script>
+</body>
+</html> 

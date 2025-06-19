@@ -225,6 +225,8 @@
       box-shadow: 0 2px 8px #0003;
       padding: 1.2rem 0.7rem 1.5rem 0.7rem;
       margin-bottom: 0.5rem;
+      height: 280px;
+      overflow: hidden;
     }
     .chart-title {
       color: #36aa00;
@@ -232,6 +234,24 @@
       font-weight: 600;
       text-align: center;
       margin-bottom: 0.5rem;
+    }
+    .chart-canvas-container {
+      height: 200px;
+      width: 100%;
+      position: relative;
+    }
+    .chart-canvas-container canvas {
+      max-height: 200px !important;
+      height: 200px !important;
+      width: 100% !important;
+      display: block !important;
+    }
+    /* Forzar tamaño del canvas de Chart.js */
+    canvas[id^="chart-"] {
+      max-height: 200px !important;
+      height: 200px !important;
+      width: 100% !important;
+      display: block !important;
     }
     @media (max-width: 700px) {
       .summary {
@@ -311,6 +331,7 @@
   </script>
   <script>
     // Chart.js rendering logic (waits for stats.js to load data)
+    // v0.1: Limitar altura de gráficos a 200px para evitar que la pantalla se tilde
     window.renderSessionCharts = function(sessionData) {
       const container = document.getElementById('charts-container');
       container.innerHTML = '';
@@ -326,7 +347,12 @@
         if (arr.length > 1) hasData = true;
         const block = document.createElement('div');
         block.className = 'chart-block';
-        block.innerHTML = `<div class='chart-title'>${label}</div><canvas id='chart-${key}' height='120'></canvas>`;
+        block.innerHTML = `
+          <div class='chart-title'>${label}</div>
+          <div class='chart-canvas-container'>
+            <canvas id='chart-${key}' height='200'></canvas>
+          </div>
+        `;
         container.appendChild(block);
         if (arr.length > 1) {
           new Chart(document.getElementById(`chart-${key}`), {
@@ -352,12 +378,33 @@
               },
               responsive: true,
               maintainAspectRatio: false,
+              aspectRatio: false,
+              layout: {
+                padding: 0
+              },
+              elements: {
+                point: {
+                  radius: 0
+                }
+              },
+              interaction: {
+                intersect: false
+              }
             }
           });
         } else {
-          block.querySelector('canvas').remove();
+          block.querySelector('.chart-canvas-container').remove();
           block.innerHTML += `<div style='color:#888;text-align:center;font-size:1rem;padding:1.5rem 0;'>No hay datos suficientes para graficar</div>`;
         }
+        // Forzar resize del canvas después de renderizar
+        setTimeout(() => {
+          const canvas = document.getElementById(`chart-${key}`);
+          if (canvas) {
+            canvas.style.height = '200px';
+            canvas.style.maxHeight = '200px';
+            canvas.style.width = '100%';
+          }
+        }, 100);
       });
       if (!hasData) {
         container.innerHTML = `<div class='loading'>No hay datos suficientes para graficar esta sesión.</div>`;

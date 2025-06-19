@@ -30,13 +30,30 @@ export function setupUI(connectHR, connectPower, connectRPM) {
     });
   }
 
-  // Versión y changelog toggle
+  // Versión y popup de versiones
   const versionLink = document.getElementById('version-link');
-  const changelog = document.getElementById('changelog');
+  const versionPopup = document.getElementById('version-popup');
+  const versionPopupClose = document.getElementById('version-popup-close');
 
-  if (versionLink && changelog) {
-    versionLink.addEventListener('click', () => {
-      changelog.style.display = changelog.style.display === 'none' ? 'block' : 'none';
+  if (versionLink && versionPopup) {
+    versionLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      versionPopup.classList.add('show');
+    });
+  }
+
+  if (versionPopupClose && versionPopup) {
+    versionPopupClose.addEventListener('click', () => {
+      versionPopup.classList.remove('show');
+    });
+  }
+
+  // Cerrar popup al hacer clic fuera de él
+  if (versionPopup) {
+    versionPopup.addEventListener('click', (e) => {
+      if (e.target === versionPopup) {
+        versionPopup.classList.remove('show');
+      }
     });
   }
 }

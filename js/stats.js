@@ -30,6 +30,13 @@ async function loadSummary() {
   }
 }
 
+function formatStat(value, decimals = 0) {
+    if (value === null || typeof value === 'undefined' || isNaN(Number(value))) {
+        return '--';
+    }
+    return Number(value).toFixed(decimals);
+}
+
 function displayResults(data) {
     const summary = document.getElementById('summary');
     const elapsedTime = formatElapsedTime(data.elapsedTime || 0);
@@ -40,38 +47,38 @@ function displayResults(data) {
       </div>
       <div class="summary-block sensor-block">
         <h2>Distance</h2>
-        <div class="value">${data.distance ? data.distance.toFixed(2) : '--'} km</div>
+        <div class="value">${formatStat(data.distance, 2)} km</div>
       </div>
       <div class="summary-block sensor-block">
         <h2>Heart Rate</h2>
-        <div class="stat-main-value">${data.bpm?.avg || '--'}</div>
+        <div class="stat-main-value">${formatStat(data.bpm?.avg, 0)}</div>
         <div class="stat-minmax-row">
-          <span class="stat-min">min: <b>${data.bpm?.min || '--'}</b></span>
-          <span class="stat-max">max: <b>${data.bpm?.max || '--'}</b></span>
+          <span class="stat-min">min: <b>${formatStat(data.bpm?.min, 0)}</b></span>
+          <span class="stat-max">max: <b>${formatStat(data.bpm?.max, 0)}</b></span>
         </div>
       </div>
       <div class="summary-block sensor-block">
         <h2>Power</h2>
-        <div class="stat-main-value">${data.power?.avg || '--'} <span class="stat-unit">W</span></div>
+        <div class="stat-main-value">${formatStat(data.power?.avg, 0)} <span class="stat-unit">W</span></div>
         <div class="stat-minmax-row">
-          <span class="stat-min">min: <b>${data.power?.min || '--'}</b></span>
-          <span class="stat-max">max: <b>${data.power?.max || '--'}</b></span>
+          <span class="stat-min">min: <b>${formatStat(data.power?.min, 0)}</b></span>
+          <span class="stat-max">max: <b>${formatStat(data.power?.max, 0)}</b></span>
         </div>
       </div>
       <div class="summary-block sensor-block">
         <h2>Cadence</h2>
-        <div class="stat-main-value">${data.rpm?.avg || '--'} <span class="stat-unit">rpm</span></div>
+        <div class="stat-main-value">${formatStat(data.rpm?.avg, 0)} <span class="stat-unit">rpm</span></div>
         <div class="stat-minmax-row">
-          <span class="stat-min">min: <b>${data.rpm?.min || '--'}</b></span>
-          <span class="stat-max">max: <b>${data.rpm?.max || '--'}</b></span>
+          <span class="stat-min">min: <b>${formatStat(data.rpm?.min, 0)}</b></span>
+          <span class="stat-max">max: <b>${formatStat(data.rpm?.max, 0)}</b></span>
         </div>
       </div>
       <div class="summary-block sensor-block">
         <h2>Km/h</h2>
-        <div class="stat-main-value">${data.speed?.avg || '--'}</div>
+        <div class="stat-main-value">${formatStat(data.speed?.avg, 1)}</div>
         <div class="stat-minmax-row">
-          <span class="stat-min">min: <b>${data.speed?.min || '--'}</b></span>
-          <span class="stat-max">max: <b>${data.speed?.max || '--'}</b></span>
+          <span class="stat-min">min: <b>${formatStat(data.speed?.min, 1)}</b></span>
+          <span class="stat-max">max: <b>${formatStat(data.speed?.max, 1)}</b></span>
         </div>
       </div>
     `;

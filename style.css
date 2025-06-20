@@ -71,8 +71,12 @@ body {
 }
 
 .app-footer {
-  padding: 1rem;
+  padding: 0.5rem 1rem;
   border-top: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80px;
 }
 
 .grid {
@@ -162,11 +166,13 @@ body {
 
 #startStopBtn {
   width: 100%;
-  max-width: 400px; /* Opcional: límite para pantallas grandes */
-  height: auto;
-  font-size: 1.5rem; /* También podés aumentar el texto */
-  display: block;
-  margin: auto;
+  max-width: 400px;
+  height: 50px;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
   background-color: var(--primary-color);
   border: none;
   color: var(--bg-color);

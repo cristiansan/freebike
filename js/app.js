@@ -251,6 +251,11 @@ function parseRPM(dataView) {
 let lastPosition = null;
 let totalDistance = 0;
 
+export function resetGPSData() {
+    totalDistance = 0;
+    lastPosition = null;
+}
+
 function toRad(deg) {
   return deg * Math.PI / 180;
 }
@@ -288,14 +293,12 @@ export function startGPS() {
         const deltaT = (current.timestamp - lastPosition.timestamp) / 1000;
         const deltaD = haversineDistance(lastPosition, current);
 
-        if (deltaT > 0 && deltaD < 100) {
+        if (deltaT > 0 && deltaD < 100 && window.isRecording && !window.isPaused) {
           const speed = deltaD / deltaT; // m/s
           totalDistance += deltaD;
 
-          const speedElement = document.getElementById('gps-speed');
           const distanceElement = document.getElementById('gps-distance');
 
-          if (speedElement) speedElement.textContent = (speed * 3.6).toFixed(1) + ' km/h';
           if (distanceElement) distanceElement.textContent = (totalDistance / 1000).toFixed(2) + ' km';
           
           // Actualizar estadísticas de la sesión si existe la función

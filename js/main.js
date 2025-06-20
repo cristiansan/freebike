@@ -1,5 +1,5 @@
 import { setupUI } from './ui.js';
-import { connectHR, connectPower, connectRPM, startGPS, restoreConnections } from './app.js';
+import { connectHR, connectPower, connectRPM, startGPS, restoreConnections, resetGPSData } from './app.js';
 import { db } from './firebase.js';
 import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
@@ -165,6 +165,11 @@ function handleClick() {
     window.startTime = new Date();
     window.pausedDuration = 0;
     
+    // Resetear datos y UI al iniciar
+    resetGPSData();
+    document.getElementById('gps-distance').textContent = '0.00 km';
+    document.getElementById('gps-speed').textContent = '0.0';
+
     // Inicializar estadísticas de sesión
     window.sessionStats = {
       bpm: { values: [], timestamps: [], sum: 0, min: null, max: null },
@@ -282,12 +287,17 @@ async function startHoldToStop() {
       // Guardar la sesión
       await saveSession(finalStats);
       
-      // Resetear variables
+      // Resetear variables y UI
       window.startTime = null;
       window.pauseStart = null;
       window.pausedDuration = 0;
       clearInterval(window.timeInterval);
-      sessionTimeDisplay.textContent = "⏱ 00:00";
+      sessionTimeDisplay.textContent = "00:00";
+      document.getElementById('hr-display').textContent = '--';
+      document.getElementById('power').textContent = '--';
+      document.getElementById('rpm').textContent = '--';
+      document.getElementById('gps-speed').textContent = '--';
+      document.getElementById('gps-distance').textContent = '--';
       releaseWakeLock();
       updateButtonUI();
       console.log("Sesión detenida.");

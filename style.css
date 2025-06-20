@@ -98,7 +98,7 @@ body {
 /* Estilos para los títulos en los bloques de sensores */
 .sensor-block h2 {
     font-size: 1rem;
-    font-weight: normal;
+    font-weight: bold;
     color: var(--secondary-color);
     margin: 0 0 0.5rem 0;
 }
@@ -181,6 +181,9 @@ body {
   padding: 1rem;
   border-radius: 12px;
   position: relative;
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10+ */
+  user-select: none; /* Standard */
 }
 
 #startStopBtn.recording {

@@ -23,44 +23,42 @@ function flushBuffer(type) {
     const avg = Math.round(aggregator.buffer.reduce((a, b) => a + b, 0) / aggregator.buffer.length);
     aggregator.buffer = []; // Limpiar buffer
 
-    // Solo actualizar la UI si se está grabando y no está en pausa
+    // Actualizar UI para sensores de conexión directa (HR, Power, RPM) siempre
+    switch (type) {
+        case 'bpm':
+            document.getElementById('hr-display').textContent = avg ?? '--';
+            break;
+        case 'power':
+            document.getElementById('power').textContent = avg ?? '--';
+            break;
+        case 'rpm':
+            document.getElementById('rpm').textContent = avg ?? '--';
+            break;
+    }
+
+    // Actualizar estadísticas y UI de GPS solo si se está grabando
     if (window.isRecording && !window.isPaused) {
-        // Realizar la actualización
         switch (type) {
             case 'bpm':
-                document.getElementById('hr-display').textContent = avg ?? '--';
-                if (window.updateSessionStats) window.updateSessionStats('bpm', avg);
-                break;
             case 'power':
-                document.getElementById('power').textContent = avg ?? '--';
-                if (window.updateSessionStats) window.updateSessionStats('power', avg);
-                break;
             case 'rpm':
-                document.getElementById('rpm').textContent = avg ?? '--';
-                if (window.updateSessionStats) window.updateSessionStats('rpm', avg);
+                // Guardar estadísticas para estos sensores
+                if (window.updateSessionStats) window.updateSessionStats(type, avg);
                 break;
             case 'speed':
+                // Actualizar UI y estadísticas de velocidad
                 const elem = document.getElementById("gps-speed");
-                if (!elem) break;
-
-                elem.dataset.rawSpeed = avg; // 'avg' está en m/s
-
-                if (isRunning) {
-                    if (avg > 0) {
-                        const pace = 1000 / (avg * 60);
+                if (elem) {
+                    if (isRunning) {
+                        const pace = (avg > 0) ? 1000 / (avg * 60) : 0;
                         const min = Math.floor(pace);
                         const sec = Math.round((pace - min) * 60).toString().padStart(2, '0');
-                        elem.textContent = `${min}:${sec}`;
+                        elem.textContent = (pace > 0) ? `${min}:${sec}` : "--";
                     } else {
-                        elem.textContent = "--";
+                        elem.textContent = `${(avg * 3.6).toFixed(1)}`;
                     }
-                } else {
-                    elem.textContent = `${(avg * 3.6).toFixed(1)}`;
                 }
-                
-                if (window.updateSessionStats) {
-                    window.updateSessionStats('speed', avg * 3.6); // Guardar en km/h
-                }
+                if (window.updateSessionStats) window.updateSessionStats('speed', avg * 3.6);
                 break;
         }
     }

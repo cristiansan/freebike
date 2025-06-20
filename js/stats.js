@@ -43,12 +43,14 @@ function displayResults(data) {
     summary.innerHTML = `
       <div class="summary-block sensor-block">
         <h2>Elapsed Time</h2>
-        <div class="value">${elapsedTime}</div>
+        <div class="stat-main-value">${elapsedTime}</div>
       </div>
+      
       <div class="summary-block sensor-block">
         <h2>Distance</h2>
-        <div class="value">${formatStat(data.distance, 2)} km</div>
+        <div class="stat-main-value">${formatStat(data.distance, 2)} <span class="stat-unit">km</span></div>
       </div>
+
       <div class="summary-block sensor-block">
         <h2>Heart Rate</h2>
         <div class="stat-main-value">${formatStat(data.bpm?.avg, 0)}</div>
@@ -57,6 +59,7 @@ function displayResults(data) {
           <span class="stat-max">max: <b>${formatStat(data.bpm?.max, 0)}</b></span>
         </div>
       </div>
+
       <div class="summary-block sensor-block">
         <h2>Power</h2>
         <div class="stat-main-value">${formatStat(data.power?.avg, 0)} <span class="stat-unit">W</span></div>
@@ -65,6 +68,7 @@ function displayResults(data) {
           <span class="stat-max">max: <b>${formatStat(data.power?.max, 0)}</b></span>
         </div>
       </div>
+
       <div class="summary-block sensor-block">
         <h2>Cadence</h2>
         <div class="stat-main-value">${formatStat(data.rpm?.avg, 0)} <span class="stat-unit">rpm</span></div>
@@ -73,6 +77,7 @@ function displayResults(data) {
           <span class="stat-max">max: <b>${formatStat(data.rpm?.max, 0)}</b></span>
         </div>
       </div>
+      
       <div class="summary-block sensor-block">
         <h2>Km/h</h2>
         <div class="stat-main-value">${formatStat(data.speed?.avg, 1)}</div>

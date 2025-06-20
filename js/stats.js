@@ -142,43 +142,224 @@ function setupActionButtons() {
 
 function handleShare() {
     const data = sessionData;
-    const summaryText = `Check out my ride on FreeBike!
-- Time: ${formatElapsedTime(data.elapsedTime)}
-- Distance: ${data.distance.toFixed(2)} km
-- Avg Power: ${data.power.avg} W
-- Avg HR: ${data.bpm.avg} bpm`;
+    const summaryText =
+`🚴‍♂️ FreeBike Session
 
-    navigator.share({
-        title: 'My FreeBike Session',
-        text: summaryText,
-        url: window.location.href
-    }).catch(error => console.error('Error sharing:', error));
+- Time: ${formatElapsedTime(data.elapsedTime)}
+- Distance: ${(data.distance ?? 0).toFixed(2)} km
+- Heart Rate: avg ${data.bpm?.avg ?? '--'} bpm (min ${data.bpm?.min ?? '--'}, max ${data.bpm?.max ?? '--'})
+- Power: avg ${data.power?.avg ?? '--'} W (min ${data.power?.min ?? '--'}, max ${data.power?.max ?? '--'})
+- Cadence: avg ${data.rpm?.avg ?? '--'} rpm (min ${data.rpm?.min ?? '--'}, max ${data.rpm?.max ?? '--'})
+- Speed: avg ${data.speed?.avg ?? '--'} km/h (min ${data.speed?.min ?? '--'}, max ${data.speed?.max ?? '--'})`;
+
+    // Crear enlace de WhatsApp
+    const whatsappText = encodeURIComponent(summaryText);
+    const whatsappUrl = `https://wa.me/?text=${whatsappText}`;
+
+    // Mostrar opciones de compartir
+    const shareOptions = [
+        { name: 'WhatsApp', action: () => window.open(whatsappUrl, '_blank') },
+        { name: 'Compartir nativo', action: () => shareNative(summaryText) },
+        { name: 'Copiar al portapapeles', action: () => copyToClipboard(summaryText) }
+    ];
+
+    // Crear modal de opciones
+    showShareModal(shareOptions);
+}
+
+function shareNative(text) {
+    if (navigator.share) {
+        navigator.share({
+            title: 'My FreeBike Session',
+            text: text
+        }).catch(error => console.error('Error sharing:', error));
+    } else {
+        copyToClipboard(text);
+    }
+}
+
+function copyToClipboard(text) {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text);
+        alert('Resumen copiado al portapapeles');
+    } else {
+        alert('No se pudo copiar al portapapeles');
+    }
+}
+
+function showShareModal(options) {
+    // Crear modal
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+    `;
+
+    const content = document.createElement('div');
+    content.style.cssText = `
+        background: var(--card-bg-color, #fff);
+        border-radius: 12px;
+        padding: 1.5rem;
+        max-width: 300px;
+        width: 90%;
+        text-align: center;
+        border: 1px solid var(--border-color, #ddd);
+    `;
+
+    const title = document.createElement('h3');
+    title.textContent = 'Compartir sesión';
+    title.style.cssText = `
+        margin: 0 0 1rem 0;
+        color: var(--fg-color, #333);
+        font-size: 1.2rem;
+    `;
+
+    const buttonsContainer = document.createElement('div');
+    buttonsContainer.style.cssText = `
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+    `;
+
+    options.forEach(option => {
+        const button = document.createElement('button');
+        button.textContent = option.name;
+        button.style.cssText = `
+            background: var(--primary-color, #007bff);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.8rem;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        `;
+        button.onclick = () => {
+            option.action();
+            document.body.removeChild(modal);
+        };
+        button.onmouseover = () => button.style.opacity = '0.8';
+        button.onmouseout = () => button.style.opacity = '1';
+        buttonsContainer.appendChild(button);
+    });
+
+    const cancelButton = document.createElement('button');
+    cancelButton.textContent = 'Cancelar';
+    cancelButton.style.cssText = `
+        background: transparent;
+        color: var(--secondary-color, #666);
+        border: 1px solid var(--border-color, #ddd);
+        border-radius: 8px;
+        padding: 0.8rem;
+        font-size: 1rem;
+        cursor: pointer;
+        margin-top: 0.5rem;
+        width: 100%;
+    `;
+    cancelButton.onclick = () => document.body.removeChild(modal);
+
+    content.appendChild(title);
+    content.appendChild(buttonsContainer);
+    content.appendChild(cancelButton);
+    modal.appendChild(content);
+    document.body.appendChild(modal);
+
+    // Cerrar al hacer clic fuera del modal
+    modal.onclick = (e) => {
+        if (e.target === modal) {
+            document.body.removeChild(modal);
+        }
+    };
 }
 
 function handleDownloadCSV() {
     const data = sessionData;
-    const headers = ['timestamp_ms', 'bpm', 'power', 'rpm', 'speed_kmh'];
     
-    // Find the max length of data arrays
-    const maxLength = Math.max(
-        data.bpm?.values?.length || 0,
-        data.power?.values?.length || 0,
-        data.rpm?.values?.length || 0,
-        data.speed?.values?.length || 0
-    );
-
-    let csvContent = headers.join(',') + '\\n';
-
-    for (let i = 0; i < maxLength; i++) {
-        const row = [
-            data.startTime.toMillis() + (i * 1000), // Approximate timestamp
-            data.bpm?.values[i] || '',
-            data.power?.values[i] || '',
-            data.rpm?.values[i] || '',
-            data.speed?.values[i] || ''
-        ];
-        csvContent += row.join(',') + '\\n';
+    const headers = ['timestamp', 'bpm', 'power', 'rpm', 'speed_kmh'];
+    
+    // Create a map of timestamps to data points
+    const dataMap = new Map();
+    
+    // Add heart rate data with actual timestamps
+    if (data.bpm?.values && data.bpm.values.length > 0) {
+        data.bpm.values.forEach((value, index) => {
+            const timestamp = data.bpm.timestamps && data.bpm.timestamps[index] 
+                ? data.bpm.timestamps[index] 
+                : data.startTime.toMillis() + (index * 1000);
+            if (!dataMap.has(timestamp)) {
+                dataMap.set(timestamp, { timestamp, bpm: '', power: '', rpm: '', speed: '' });
+            }
+            dataMap.get(timestamp).bpm = value;
+        });
     }
+    
+    // Add power data with actual timestamps
+    if (data.power?.values && data.power.values.length > 0) {
+        data.power.values.forEach((value, index) => {
+            const timestamp = data.power.timestamps && data.power.timestamps[index] 
+                ? data.power.timestamps[index] 
+                : data.startTime.toMillis() + (index * 1000);
+            if (!dataMap.has(timestamp)) {
+                dataMap.set(timestamp, { timestamp, bpm: '', power: '', rpm: '', speed: '' });
+            }
+            dataMap.get(timestamp).power = value;
+        });
+    }
+    
+    // Add RPM data with actual timestamps
+    if (data.rpm?.values && data.rpm.values.length > 0) {
+        data.rpm.values.forEach((value, index) => {
+            const timestamp = data.rpm.timestamps && data.rpm.timestamps[index] 
+                ? data.rpm.timestamps[index] 
+                : data.startTime.toMillis() + (index * 1000);
+            if (!dataMap.has(timestamp)) {
+                dataMap.set(timestamp, { timestamp, bpm: '', power: '', rpm: '', speed: '' });
+            }
+            dataMap.get(timestamp).rpm = value;
+        });
+    }
+    
+    // Add speed data with actual timestamps
+    if (data.speed?.values && data.speed.values.length > 0) {
+        data.speed.values.forEach((value, index) => {
+            const timestamp = data.speed.timestamps && data.speed.timestamps[index] 
+                ? data.speed.timestamps[index] 
+                : data.startTime.toMillis() + (index * 1000);
+            if (!dataMap.has(timestamp)) {
+                dataMap.set(timestamp, { timestamp, bpm: '', power: '', rpm: '', speed: '' });
+            }
+            dataMap.get(timestamp).speed = value;
+        });
+    }
+    
+    // Convert map to sorted array
+    const sortedData = Array.from(dataMap.values()).sort((a, b) => a.timestamp - b.timestamp);
+    
+    let csvContent = headers.join(',') + '\n';
+    
+    // Add data rows
+    sortedData.forEach(row => {
+        // Convert timestamp to readable format without milliseconds
+        const date = new Date(row.timestamp);
+        const readableTimestamp = date.toISOString().slice(0, 19).replace('T', ' ');
+        
+        const csvRow = [
+            readableTimestamp,
+            row.bpm || '',
+            row.power || '',
+            row.rpm || '',
+            row.speed || ''
+        ];
+        csvContent += csvRow.join(',') + '\n';
+    });
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");

@@ -3,6 +3,79 @@
 // ----------------------
 let isRunning = false; // Esto debe estar fuera de la función
 
+// --- Throttling y promediado de datos ---
+const UPDATE_INTERVAL_MS = 3000; // 3 segundos
+
+const dataAggregator = {
+    bpm: { buffer: [], timer: null },
+    power: { buffer: [], timer: null },
+    rpm: { buffer: [], timer: null },
+    speed: { buffer: [], timer: null },
+};
+
+function flushBuffer(type) {
+    const aggregator = dataAggregator[type];
+    if (aggregator.buffer.length === 0) {
+        aggregator.timer = null;
+        return;
+    }
+
+    const avg = Math.round(aggregator.buffer.reduce((a, b) => a + b, 0) / aggregator.buffer.length);
+    aggregator.buffer = []; // Limpiar buffer
+
+    // Realizar la actualización
+    switch (type) {
+        case 'bpm':
+            document.getElementById('hr-display').textContent = avg ?? '--';
+            if (window.updateSessionStats) window.updateSessionStats('bpm', avg);
+            break;
+        case 'power':
+            document.getElementById('power').textContent = avg ?? '--';
+            if (window.updateSessionStats) window.updateSessionStats('power', avg);
+            break;
+        case 'rpm':
+            document.getElementById('rpm').textContent = avg ?? '--';
+            if (window.updateSessionStats) window.updateSessionStats('rpm', avg);
+            break;
+        case 'speed':
+            const elem = document.getElementById("gps-speed");
+            if (!elem) break;
+
+            elem.dataset.rawSpeed = avg; // 'avg' está en m/s
+
+            if (isRunning) {
+                if (avg > 0) {
+                    const pace = 1000 / (avg * 60);
+                    const min = Math.floor(pace);
+                    const sec = Math.round((pace - min) * 60).toString().padStart(2, '0');
+                    elem.textContent = `${min}:${sec}`;
+                } else {
+                    elem.textContent = "--";
+                }
+            } else {
+                elem.textContent = `${(avg * 3.6).toFixed(1)}`;
+            }
+            
+            if (window.updateSessionStats) {
+                window.updateSessionStats('speed', avg * 3.6); // Guardar en km/h
+            }
+            break;
+    }
+
+    aggregator.timer = null; // Reiniciar timer
+}
+
+function aggregateAndSchedule(type, value) {
+    if (value === null || typeof value === 'undefined' || !isFinite(value)) return;
+    
+    const aggregator = dataAggregator[type];
+    aggregator.buffer.push(value);
+
+    if (!aggregator.timer) {
+        aggregator.timer = setTimeout(() => flushBuffer(type), UPDATE_INTERVAL_MS);
+    }
+}
+
 function setupThemeSwitcher() {
   const themeToggle = document.getElementById('theme-toggle-checkbox');
   const body = document.body;
@@ -92,52 +165,19 @@ export function setupUI(connectHR, connectPower, connectRPM) {
 // Actualizaciones UI
 // ----------------------
 export function updateHeartRate(value) {
-  document.getElementById('hr-display').textContent = value ?? '--';
-  // Actualizar estadísticas de la sesión si existe la función
-  if (window.updateSessionStats) {
-    window.updateSessionStats('bpm', value);
-  }
+  aggregateAndSchedule('bpm', value);
 }
 
 export function updatePower(value) {
-  document.getElementById('power').textContent = value ?? '--';
-  // Actualizar estadísticas de la sesión si existe la función
-  if (window.updateSessionStats) {
-    window.updateSessionStats('power', value);
-  }
+  aggregateAndSchedule('power', value);
 }
 
 export function updateRPM(value) {
-  document.getElementById('rpm').textContent = value ?? '--';
-  // Actualizar estadísticas de la sesión si existe la función
-  if (window.updateSessionStats) {
-    window.updateSessionStats('rpm', value);
-  }
+  aggregateAndSchedule('rpm', value);
 }
 
 export function updateSpeed(mps) {
-  const elem = document.getElementById("gps-speed");
-  if (!elem) return;
-
-  elem.dataset.rawSpeed = mps;
-
-  if (isRunning) {
-    if (mps > 0) {
-      const pace = 1000 / (mps * 60);
-      const min = Math.floor(pace);
-      const sec = Math.round((pace - min) * 60).toString().padStart(2, '0');
-      elem.textContent = `${min}:${sec}`;
-    } else {
-      elem.textContent = "--";
-    }
-  } else {
-    elem.textContent = `${(mps * 3.6).toFixed(1)}`;
-  }
-  
-  // Actualizar estadísticas de la sesión si existe la función
-  if (window.updateSessionStats) {
-    window.updateSessionStats('speed', mps * 3.6); // Convertir a km/h
-  }
+  aggregateAndSchedule('speed', mps);
 }
 
 

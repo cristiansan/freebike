@@ -68,11 +68,12 @@ body {
   flex: 1;
   overflow-y: auto;
   padding: 1rem;
+  padding-bottom: 0.5rem;
 }
 
 .app-footer {
   padding: 0.5rem 1rem;
-  border-top: 1px solid var(--border-color);
+  padding-top: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -94,8 +95,8 @@ body {
   padding: 1rem;
 }
 
-/* Estilos para los bloques de resumen en stats.html, heredan de sensor-block */
-.summary-block h2 {
+/* Estilos para los títulos en los bloques de sensores */
+.sensor-block h2 {
     font-size: 1rem;
     font-weight: normal;
     color: var(--secondary-color);
@@ -183,8 +184,8 @@ body {
 }
 
 #startStopBtn.recording {
-    background-color: #be260b;
-    color: white;
+    background-color: var(--primary-color);
+    color: var(--bg-color);
 }
 
 #startStopBtn:hover {

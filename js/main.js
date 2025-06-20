@@ -23,10 +23,10 @@ window.wakeLock = null;
 
 // Variables para estadísticas acumuladas
 typeof window.sessionStats === 'undefined' && (window.sessionStats = {
-  bpm: { values: [], sum: 0, min: null, max: null },
-  power: { values: [], sum: 0, min: null, max: null },
-  rpm: { values: [], sum: 0, min: null, max: null },
-  speed: { values: [], sum: 0, min: null, max: null },
+  bpm: { values: [], timestamps: [], sum: 0, min: null, max: null },
+  power: { values: [], timestamps: [], sum: 0, min: null, max: null },
+  rpm: { values: [], timestamps: [], sum: 0, min: null, max: null },
+  speed: { values: [], timestamps: [], sum: 0, min: null, max: null },
   distance: 0,
   startTime: null,
   endTime: null
@@ -167,10 +167,10 @@ function handleClick() {
     
     // Inicializar estadísticas de sesión
     window.sessionStats = {
-      bpm: { values: [], sum: 0, min: null, max: null },
-      power: { values: [], sum: 0, min: null, max: null },
-      rpm: { values: [], sum: 0, min: null, max: null },
-      speed: { values: [], sum: 0, min: null, max: null },
+      bpm: { values: [], timestamps: [], sum: 0, min: null, max: null },
+      power: { values: [], timestamps: [], sum: 0, min: null, max: null },
+      rpm: { values: [], timestamps: [], sum: 0, min: null, max: null },
+      speed: { values: [], timestamps: [], sum: 0, min: null, max: null },
       distance: 0,
       startTime: window.startTime,
       endTime: null
@@ -235,7 +235,8 @@ async function startHoldToStop() {
           min: window.sessionStats.bpm.min || 0,
           max: window.sessionStats.bpm.max || 0,
           count: window.sessionStats.bpm.values.length,
-          values: window.sessionStats.bpm.values.slice(-maxArraySize) // Solo los últimos 100 valores
+          values: window.sessionStats.bpm.values.slice(-maxArraySize), // Solo los últimos 100 valores
+          timestamps: window.sessionStats.bpm.timestamps.slice(-maxArraySize)
         },
         
         // Potencia promedio, mínima y máxima
@@ -244,7 +245,8 @@ async function startHoldToStop() {
           min: window.sessionStats.power.min || 0,
           max: window.sessionStats.power.max || 0,
           count: window.sessionStats.power.values.length,
-          values: window.sessionStats.power.values.slice(-maxArraySize)
+          values: window.sessionStats.power.values.slice(-maxArraySize),
+          timestamps: window.sessionStats.power.timestamps.slice(-maxArraySize)
         },
         
         // Cadencia promedio, mínima y máxima
@@ -253,7 +255,8 @@ async function startHoldToStop() {
           min: window.sessionStats.rpm.min || 0,
           max: window.sessionStats.rpm.max || 0,
           count: window.sessionStats.rpm.values.length,
-          values: window.sessionStats.rpm.values.slice(-maxArraySize)
+          values: window.sessionStats.rpm.values.slice(-maxArraySize),
+          timestamps: window.sessionStats.rpm.timestamps.slice(-maxArraySize)
         },
         
         // Velocidad promedio, mínima y máxima
@@ -262,7 +265,8 @@ async function startHoldToStop() {
           min: window.sessionStats.speed.min || 0,
           max: window.sessionStats.speed.max || 0,
           count: window.sessionStats.speed.values.length,
-          values: window.sessionStats.speed.values.slice(-maxArraySize)
+          values: window.sessionStats.speed.values.slice(-maxArraySize),
+          timestamps: window.sessionStats.speed.timestamps.slice(-maxArraySize)
         },
         
         startTime: window.sessionStats.startTime,
@@ -327,10 +331,14 @@ startStopBtn.addEventListener('touchcancel', cancelHoldToStop);
 
 // Función para actualizar estadísticas
 function updateSessionStats(type, value) {
-  if (!window.isRecording || window.isPaused || value === null || value === undefined || value === 0) return;
+  if (!window.isRecording || window.isPaused || value === null || value === undefined || value === 0) {
+    return;
+  }
   if (window.sessionStats[type]) {
     window.sessionStats[type].values = window.sessionStats[type].values || [];
+    window.sessionStats[type].timestamps = window.sessionStats[type].timestamps || [];
     window.sessionStats[type].values.push(value);
+    window.sessionStats[type].timestamps.push(Date.now());
     window.sessionStats[type].sum += value;
     if (window.sessionStats[type].min === null || value < window.sessionStats[type].min) {
       window.sessionStats[type].min = value;

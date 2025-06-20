@@ -1,52 +1,145 @@
+:root {
+  --font-main: 'Courier New', Courier, monospace;
+
+  /* Light Theme Colors */
+  --light-bg: #F5F5F5;
+  --light-fg: #333333;
+  --light-primary: #367AF6;
+  --light-secondary: #5A5A5A;
+  --light-accent: #F2C464;
+  --light-card-bg: #FFFFFF;
+  --light-border: #DDDDDD;
+
+  /* Dark Theme Colors */
+  --dark-bg: #333333;
+  --dark-fg: #FFFFFF;
+  --dark-primary: #F2C464;
+  --dark-secondary: #A9A9A9;
+  --dark-accent: #367AF6;
+  --dark-card-bg: #424242;
+  --dark-border: #555555;
+}
+
 body {
-  background-color: #000;
-  color: #fff;
-  font-family: Arial, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--fg-color);
+  font-family: var(--font-main);
   margin: 0;
-  padding: 1rem;
-  height: 95vh;
+  padding: 0;
+  height: 100vh;
   overflow: hidden; /* evita el scroll */
+}
+
+.light-theme {
+  --bg-color: var(--light-bg);
+  --fg-color: var(--light-fg);
+  --primary-color: var(--light-primary);
+  --secondary-color: var(--light-secondary);
+  --accent-color: var(--light-accent);
+  --card-bg-color: var(--light-card-bg);
+  --border-color: var(--light-border);
+}
+
+.dark-theme {
+  --bg-color: var(--dark-bg);
+  --fg-color: var(--dark-fg);
+  --primary-color: var(--dark-primary);
+  --secondary-color: var(--dark-secondary);
+  --accent-color: var(--dark-accent);
+  --card-bg-color: var(--dark-card-bg);
+  --border-color: var(--dark-border);
+}
+
+.app-container {
   display: flex;
   flex-direction: column;
+  height: 100vh;
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.app-footer {
+  padding: 1rem;
+  border-top: 1px solid var(--border-color);
 }
 
 .grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr); /* SIEMPRE 2 columnas */
-  gap: 0.5rem;
-  padding: 0.1rem;
-  max-width: auto;
-  max-height: auto;
-  margin: 0 auto;
-  flex: 1;
-  overflow-y:auto; /* permite scroll interno si es necesario */
+  gap: 1rem;
 }
 
-
 .sensor-block {
-  background-color: #111;
-  /* padding: 1rem; */
-  border: 1.5px solid #333;
-  border-radius: 12px;
+  background-color: var(--card-bg-color);
+  border: 1.5px solid var(--border-color);
+  border-radius: 8px;
   text-align: center;
   transition: background 0.3s ease;
+  padding: 1rem;
+}
 
+/* Estilos para los bloques de resumen en stats.html, heredan de sensor-block */
+.summary-block h2 {
+    font-size: 1rem;
+    font-weight: normal;
+    color: var(--secondary-color);
+    margin: 0 0 0.5rem 0;
+}
+
+.stat-main-value {
+    font-size: 2.1rem;
+    font-weight: 700;
+    color: var(--fg-color);
+    line-height: 1.1;
+}
+
+.stat-unit {
+    font-size: 1rem;
+    color: var(--primary-color);
+    margin-left: 0.2rem;
+}
+
+ .stat-minmax-row {
+  display: flex;
+  justify-content: space-around;
+  font-size: 0.9rem;
+  color: var(--secondary-color);
+  margin-top: 0.5rem;
+}
+
+.stat-min b, .stat-max b {
+    color: var(--fg-color);
+    font-weight: bold;
 }
 
 .session-time {
-  background-color: #222;
-  border: 2px solid #0ff;
-  box-shadow: 0 0 10px #36aa00;
+  background-color: var(--card-bg-color);
+  border: 2px solid var(--primary-color);
+  box-shadow: 0 0 10px var(--primary-color);
 }
 
 .value {
   font-size: 2rem;
   margin: 0.5rem 0;
+  color: var(--primary-color);
+  font-weight: bold;
 }
 
 .icon-button {
-  background-color: #333;
-  border: 1px solid #666;
+  background-color: var(--secondary-color);
+  border: 1px solid var(--border-color);
   border-radius: 50px;
   padding: 0.5rem;
   margin-top: 0.5rem;
@@ -58,7 +151,8 @@ body {
 }
 
 .icon-button:hover {
-  background-color: #36aa00;
+  background-color: var(--primary-color);
+  color: var(--bg-color);
 }
 
 .icon-button img {
@@ -68,24 +162,27 @@ body {
 
 #startStopBtn {
   width: 100%;
-  max-width: auto; /* Opcional: límite para pantallas grandes */
+  max-width: 400px; /* Opcional: límite para pantallas grandes */
   height: auto;
-  font-size: 1.2rem; /* También podés aumentar el texto */
+  font-size: 1.5rem; /* También podés aumentar el texto */
   display: block;
   margin: auto;
-  margin-bottom: 0.5rem;
-  background-color: #36aa00;
+  background-color: var(--primary-color);
   border: none;
-  color: white;
+  color: var(--bg-color);
   font-weight: bold;
-  padding: 0.75rem 0.75rem;
-  border-radius: 10px;
-  font-size: 1.2rem;
+  padding: 1rem;
+  border-radius: 12px;
   position: relative;
 }
 
+#startStopBtn.recording {
+    background-color: #be260b;
+    color: white;
+}
+
 #startStopBtn:hover {
-  background-color: #be260b;
+  opacity: 0.9;
 }
 
 .hold-progress {
@@ -100,10 +197,13 @@ body {
 }
 
 .version-section {
-  margin-top: 1rem;
-  font-size: 0.85rem;
-  text-align: center;
-  color: #888;
+  font-size: 1rem;
+  text-align: left;
+  color: var(--secondary-color);
+}
+.version-section a {
+    color: var(--secondary-color);
+    text-decoration: none;
 }
 
 .recording {
@@ -116,4 +216,113 @@ body {
   padding: 0.5rem 1rem;
   border-radius: 10px;
   box-shadow: 0 0 5px red;
+}
+
+/* Theme switcher styles */
+.theme-switcher {
+    display: flex;
+    align-items: center;
+}
+
+.theme-toggle-label {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 28px;
+}
+
+.theme-toggle-label input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.theme-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 28px;
+}
+
+.theme-toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black"><path d="M12 9c1.65 0 3 1.35 3 3s-1.35 3-3 3-3-1.35-3-3 1.35-3 3-3m0-2c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.64 5.64c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41-.39-.39-1.02-.39-1.41 0-.39.39-.39 1.02 0 1.41zm12.72 12.72c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41-.39-.39-1.02-.39-1.41 0-.39.39-.39 1.02 0 1.41zM18.36 5.64c.39-.39.39-1.02 0-1.41-.39-.39-1.02-.39-1.41 0-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0zM6.05 19.47c-.39-.39-.39-1.02 0-1.41.39-.39 1.02-.39 1.41 0 .39.39.39 1.02 0 1.41-.39.39-1.02.39-1.41 0z"/></svg>');
+}
+
+input:checked + .theme-toggle-slider {
+    background-color: var(--primary-color);
+}
+
+input:checked + .theme-toggle-slider:before {
+    transform: translateX(22px);
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M9.37 5.51c.33-.24.78-.15 1.02.18.24.33.15.78-.18 1.02A7.5 7.5 0 005.5 12c0 4.14 3.36 7.5 7.5 7.5s7.5-3.36 7.5-7.5c0-2.08-.84-3.96-2.2-5.29-.33-.24-.42-.69-.18-1.02.24-.33.69-.42 1.02-.18C20.12 7.23 22 9.48 22 12c0 5.52-4.48 10-10 10S2 17.52 2 12c0-2.52 1.88-4.77 4.29-6.31z"/></svg>');
+}
+
+/* Modal Styles */
+.modal {
+  position: fixed;
+  z-index: 100;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background-color: var(--card-bg-color);
+  color: var(--fg-color);
+  margin: auto;
+  padding: 20px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  width: 80%;
+  max-width: 500px;
+  position: relative;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.modal-close-btn {
+  color: var(--secondary-color);
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.modal-close-btn:hover,
+.modal-close-btn:focus {
+  color: var(--primary-color);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+#changelog-list {
+    list-style-type: none;
+    padding-left: 0;
+}
+#changelog-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+#changelog-list li:last-child {
+    border-bottom: none;
 }

@@ -76,7 +76,7 @@ function updateElapsedTime() {
   const seconds = Math.floor(ms / 1000);
   const min = Math.floor(seconds / 60).toString().padStart(2, '0');
   const sec = (seconds % 60).toString().padStart(2, '0');
-  sessionTimeDisplay.textContent = `⏱ ${min}:${sec}`;
+  sessionTimeDisplay.textContent = `${min}:${sec}`;
 }
 
 // --- Guardar sesión en Firebase ---
@@ -136,11 +136,11 @@ function updateButtonUI() {
     startStopLabel.textContent = "▶️ Start";
     startStopBtn.classList.remove("recording", "paused", "holding");
   } else if (window.isPaused) {
-    startStopLabel.textContent = "⏸️ HOLD TO STOP";
+    startStopLabel.textContent = "⏸️ Paused (Hold to Stop)";
     startStopBtn.classList.remove("recording");
     startStopBtn.classList.add("paused");
   } else {
-    startStopLabel.textContent = "🔴 Grabando sesión...";
+    startStopLabel.textContent = "🔴 Recording...";
     startStopBtn.classList.add("recording");
     startStopBtn.classList.remove("paused", "holding");
   }

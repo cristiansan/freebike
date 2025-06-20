@@ -1,4 +1,4 @@
-import { updateHeartRate, updatePower, updateRPM } from './ui.js';
+import { updateHeartRate, updatePower, updateRPM, updateSpeed } from './ui.js';
 
 //Conector HR---------------------------------------------
 export async function connectHR() {
@@ -209,6 +209,11 @@ export function startGPS() {
             if (window.sessionStats) {
               window.sessionStats.distance = totalDistance / 1000; // Convertir a km
             }
+          }
+
+          // Actualiza el UI de velocidad
+          if (speed !== null && isFinite(speed)) {
+            updateSpeed(speed); // Llama a la función de UI
           }
         }
       }

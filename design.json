@@ -1,0 +1,26 @@
+{
+  "theme": "retro-advent",
+  "default": "dark",
+  "fonts": {
+    "main": "monospace",
+    "monospace": "'Courier New', Courier, monospace"
+  },
+  "light": {
+    "background": "#F5F5F5",
+    "foreground": "#333333",
+    "primary": "#367AF6",
+    "secondary": "#5A5A5A",
+    "accent": "#F2C464",
+    "card-bg": "#FFFFFF",
+    "border": "#DDDDDD"
+  },
+  "dark": {
+    "background": "#333333",
+    "foreground": "#FFFFFF",
+    "primary": "#F2C464",
+    "secondary": "#A9A9A9",
+    "accent": "#367AF6",
+    "card-bg": "#424242",
+    "border": "#555555"
+  }
+} 

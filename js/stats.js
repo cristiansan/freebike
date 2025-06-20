@@ -44,7 +44,7 @@ function displayResults(data) {
       </div>
       <div class="summary-block sensor-block">
         <h2>Heart Rate</h2>
-        <div class="stat-main-value">${data.bpm?.avg || '--'} <span class="stat-unit">bpm</span></div>
+        <div class="stat-main-value">${data.bpm?.avg || '--'}</div>
         <div class="stat-minmax-row">
           <span class="stat-min">min: <b>${data.bpm?.min || '--'}</b></span>
           <span class="stat-max">max: <b>${data.bpm?.max || '--'}</b></span>

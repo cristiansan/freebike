@@ -1,10 +1,15 @@
 import { setupUI } from './ui.js';
-import { connectHR, connectPower, connectRPM, startGPS } from './app.js';
+import { connectHR, connectPower, connectRPM, startGPS, restoreConnections } from './app.js';
 import { db } from './firebase.js';
 import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
 setupUI(connectHR, connectPower, connectRPM);
 startGPS(); // Activa el GPS al iniciar
+
+// Restaurar conexiones Bluetooth guardadas
+setTimeout(() => {
+  restoreConnections();
+}, 1000); // Pequeño delay para asegurar que la UI esté lista
 
 window.isRecording = false;
 window.isPaused = false;
@@ -72,6 +77,9 @@ function getElapsedTimeMs() {
 }
 
 function updateElapsedTime() {
+  // No actualizar el tiempo si está pausado
+  if (window.isPaused) return;
+  
   const ms = getElapsedTimeMs();
   const seconds = Math.floor(ms / 1000);
   const min = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -174,13 +182,24 @@ function handleClick() {
     guardarSesionActual();
     launchFullscreen(); // ⬅️ Entrar en pantalla completa al comenzar
   } else if (!window.isPaused) {
+    // Pausar la sesión
     window.isPaused = true;
     window.pauseStart = new Date();
+    // Pausar el intervalo de tiempo
+    if (window.timeInterval) {
+      clearInterval(window.timeInterval);
+      window.timeInterval = null;
+    }
   } else {
+    // Reanudar la sesión
     window.isPaused = false;
     if (window.pauseStart) {
       window.pausedDuration += new Date() - window.pauseStart;
       window.pauseStart = null;
+    }
+    // Reanudar el intervalo de tiempo
+    if (!window.timeInterval) {
+      window.timeInterval = setInterval(updateElapsedTime, 1000);
     }
   }
 
@@ -289,6 +308,12 @@ function cancelHoldToStop() {
     window.holdTimeout = null;
   }
   startStopBtn.classList.remove('holding');
+  
+  // Asegurar que el intervalo de tiempo esté detenido si la sesión no está activa
+  if (!window.isRecording && window.timeInterval) {
+    clearInterval(window.timeInterval);
+    window.timeInterval = null;
+  }
 }
 
 // --- Eventos del botón ---

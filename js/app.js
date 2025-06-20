@@ -1,14 +1,81 @@
 import { updateHeartRate, updatePower, updateRPM, updateSpeed } from './ui.js';
 
-//Conector HR---------------------------------------------
-export async function connectHR() {
+// Variables globales para mantener referencias a las conexiones
+let hrDevice = null;
+let powerDevice = null;
+let rpmDevice = null;
+
+// Funciones para guardar y restaurar el estado de conexiones
+function saveConnectionState(deviceType, deviceId) {
+  const connections = JSON.parse(localStorage.getItem('bluetoothConnections') || '{}');
+  connections[deviceType] = deviceId;
+  localStorage.setItem('bluetoothConnections', JSON.stringify(connections));
+  console.log(`Estado de conexión guardado para ${deviceType}:`, deviceId);
+}
+
+function getConnectionState() {
+  return JSON.parse(localStorage.getItem('bluetoothConnections') || '{}');
+}
+
+function clearConnectionState(deviceType) {
+  const connections = JSON.parse(localStorage.getItem('bluetoothConnections') || '{}');
+  delete connections[deviceType];
+  localStorage.setItem('bluetoothConnections', JSON.stringify(connections));
+  console.log(`Estado de conexión limpiado para ${deviceType}`);
+}
+
+// Función para restaurar conexiones automáticamente
+export async function restoreConnections() {
+  const connections = getConnectionState();
+  console.log('Intentando restaurar conexiones:', connections);
+  
+  if (connections.hr) {
+    console.log('Restaurando conexión HR...');
+    try {
+      await connectHRById(connections.hr);
+    } catch (error) {
+      console.log('No se pudo restaurar conexión HR:', error);
+      clearConnectionState('hr');
+    }
+  }
+  
+  if (connections.power) {
+    console.log('Restaurando conexión Power...');
+    try {
+      await connectPowerById(connections.power);
+    } catch (error) {
+      console.log('No se pudo restaurar conexión Power:', error);
+      clearConnectionState('power');
+    }
+  }
+  
+  if (connections.rpm) {
+    console.log('Restaurando conexión RPM...');
+    try {
+      await connectRPMById(connections.rpm);
+    } catch (error) {
+      console.log('No se pudo restaurar conexión RPM:', error);
+      clearConnectionState('rpm');
+    }
+  }
+}
+
+// Funciones para conectar por ID (sin diálogo de selección)
+async function connectHRById(deviceId) {
   try {
-    console.log("Buscando sensor de HR...");
-
+    console.log("Conectando a HR por ID:", deviceId);
+    
+    // Intentar conectar directamente al dispositivo
     const device = await navigator.bluetooth.requestDevice({
-      filters: [{ services: ['heart_rate'] }]
+      filters: [{ services: ['heart_rate'] }],
+      optionalServices: ['heart_rate']
     });
-
+    
+    // Verificar que sea el dispositivo correcto
+    if (device.id !== deviceId) {
+      throw new Error('Dispositivo incorrecto');
+    }
+    
     const server = await device.gatt.connect();
     const service = await server.getPrimaryService('heart_rate');
     const characteristic = await service.getCharacteristic('heart_rate_measurement');
@@ -19,41 +86,39 @@ export async function connectHR() {
       const bpm = parseHeartRate(event.target.value);
       updateHeartRate(bpm);
     });
-// ✅ Una vez conectado y notificando, marcamos el botón como "conectado"
-    // await characteristic.startNotifications();
+
+    hrDevice = device;
+    saveConnectionState('hr', device.id);
+    
     document.getElementById("hrConnectBtn").classList.add("connected");
-    console.log('Conectado a la banda HR');
-  } catch (error) {
-    console.error('Error conectando HR:', error);
-  }
-  // Al final de connectHR(), justo después de marcar botón conectado y mostrar consola
-window.holdTriggered = false;
-
-const startStopBtn = document.getElementById('startStopBtn');
-holdTriggered = false;
-startStopBtn.classList.remove('holding', 'paused', 'recording');
-window.isRecording = false;
-window.isPaused = false;
-updateButtonUI();
-
-
-}
-
-function parseHeartRate(dataView) {
-  const flags = dataView.getUint8(0);
-  const rate16Bits = flags & 0x01;
-  return rate16Bits ? dataView.getUint16(1, true) : dataView.getUint8(1);
-}
-
-//Conector Potencia---------------------------------------------
-export async function connectPower() {
-  try {
-    console.log("Buscando sensor de potencia...");
-
-    const device = await navigator.bluetooth.requestDevice({
-      filters: [{ services: ['cycling_power'] }]
+    console.log('HR reconectado exitosamente');
+    
+    device.addEventListener('gattserverdisconnected', () => {
+      console.log('Dispositivo HR desconectado');
+      document.getElementById("hrConnectBtn").classList.remove("connected");
+      hrDevice = null;
+      clearConnectionState('hr');
     });
+    
+  } catch (error) {
+    console.error('Error reconectando HR:', error);
+    throw error;
+  }
+}
 
+async function connectPowerById(deviceId) {
+  try {
+    console.log("Conectando a Power por ID:", deviceId);
+    
+    const device = await navigator.bluetooth.requestDevice({
+      filters: [{ services: ['cycling_power'] }],
+      optionalServices: ['cycling_power']
+    });
+    
+    if (device.id !== deviceId) {
+      throw new Error('Dispositivo incorrecto');
+    }
+    
     const server = await device.gatt.connect();
     const service = await server.getPrimaryService('cycling_power');
     const characteristic = await service.getCharacteristic('cycling_power_measurement');
@@ -65,29 +130,38 @@ export async function connectPower() {
       updatePower(value);
     });
 
-    // ✅ Una vez conectado y notificando, marcamos el botón como "conectado"
-    document.getElementById("powerConnectBtn").classList.add("connected");
-    console.log('Sensor de potencia conectado');
+    powerDevice = device;
+    saveConnectionState('power', device.id);
 
-  } catch (err) {
-    console.error('Error conectando Potencia:', err);
+    document.getElementById("powerConnectBtn").classList.add("connected");
+    console.log('Power reconectado exitosamente');
+
+    device.addEventListener('gattserverdisconnected', () => {
+      console.log('Dispositivo Power desconectado');
+      document.getElementById("powerConnectBtn").classList.remove("connected");
+      powerDevice = null;
+      clearConnectionState('power');
+    });
+
+  } catch (error) {
+    console.error('Error reconectando Power:', error);
+    throw error;
   }
 }
 
-function parsePower(dataView) {
-  // Bytes 2-3: Potencia instantánea (uint16)
-  return dataView.getUint16(2, true);
-}
-
-//Conector Cadencia---------------------------------------------
-export async function connectRPM() {
+async function connectRPMById(deviceId) {
   try {
-    console.log("Buscando sensor de cadencia...");
-
+    console.log("Conectando a RPM por ID:", deviceId);
+    
     const device = await navigator.bluetooth.requestDevice({
-      filters: [{ services: ['cycling_speed_and_cadence'] }]
+      filters: [{ services: ['cycling_speed_and_cadence'] }],
+      optionalServices: ['cycling_speed_and_cadence']
     });
-
+    
+    if (device.id !== deviceId) {
+      throw new Error('Dispositivo incorrecto');
+    }
+    
     const server = await device.gatt.connect();
     const service = await server.getPrimaryService('cycling_speed_and_cadence');
     const characteristic = await service.getCharacteristic('csc_measurement');
@@ -99,12 +173,34 @@ export async function connectRPM() {
       if (rpm !== null) updateRPM(rpm);
     });
 
-    document.getElementById("rpmConnectBtn").classList.add("connected");
-    console.log('Sensor de cadencia conectado');
+    rpmDevice = device;
+    saveConnectionState('rpm', device.id);
 
-  } catch (err) {
-    console.error('Error conectando Cadencia:', err);
+    document.getElementById("rpmConnectBtn").classList.add("connected");
+    console.log('RPM reconectado exitosamente');
+
+    device.addEventListener('gattserverdisconnected', () => {
+      console.log('Dispositivo RPM desconectado');
+      document.getElementById("rpmConnectBtn").classList.remove("connected");
+      rpmDevice = null;
+      clearConnectionState('rpm');
+    });
+
+  } catch (error) {
+    console.error('Error reconectando RPM:', error);
+    throw error;
   }
+}
+
+function parseHeartRate(dataView) {
+  const flags = dataView.getUint8(0);
+  const rate16Bits = flags & 0x01;
+  return rate16Bits ? dataView.getUint16(1, true) : dataView.getUint8(1);
+}
+
+function parsePower(dataView) {
+  // Bytes 2-3: Potencia instantánea (uint16)
+  return dataView.getUint16(2, true);
 }
 
 let lastCrankRevolutions = null;
@@ -151,7 +247,7 @@ function parseRPM(dataView) {
   lastCrankEventTime = crankEventTime;
   return null;
 }
-//Conector GPS---------------------------------------------
+
 let lastPosition = null;
 let totalDistance = 0;
 
@@ -228,3 +324,129 @@ export function startGPS() {
     }
   );
 }
+
+//Conector HR---------------------------------------------
+export async function connectHR() {
+  try {
+    console.log("Buscando sensor de HR...");
+
+    const device = await navigator.bluetooth.requestDevice({
+      filters: [{ services: ['heart_rate'] }]
+    });
+
+    const server = await device.gatt.connect();
+    const service = await server.getPrimaryService('heart_rate');
+    const characteristic = await service.getCharacteristic('heart_rate_measurement');
+
+    await characteristic.startNotifications();
+
+    characteristic.addEventListener('characteristicvaluechanged', (event) => {
+      const bpm = parseHeartRate(event.target.value);
+      updateHeartRate(bpm);
+    });
+
+    // Guardar referencia al dispositivo y estado de conexión
+    hrDevice = device;
+    saveConnectionState('hr', device.id);
+    
+    // ✅ Una vez conectado y notificando, marcamos el botón como "conectado"
+    document.getElementById("hrConnectBtn").classList.add("connected");
+    console.log('Conectado a la banda HR');
+    
+    // Manejar desconexión
+    device.addEventListener('gattserverdisconnected', () => {
+      console.log('Dispositivo HR desconectado');
+      document.getElementById("hrConnectBtn").classList.remove("connected");
+      hrDevice = null;
+      clearConnectionState('hr');
+    });
+    
+  } catch (error) {
+    console.error('Error conectando HR:', error);
+    clearConnectionState('hr');
+  }
+}
+
+//Conector Potencia---------------------------------------------
+export async function connectPower() {
+  try {
+    console.log("Buscando sensor de potencia...");
+
+    const device = await navigator.bluetooth.requestDevice({
+      filters: [{ services: ['cycling_power'] }]
+    });
+
+    const server = await device.gatt.connect();
+    const service = await server.getPrimaryService('cycling_power');
+    const characteristic = await service.getCharacteristic('cycling_power_measurement');
+
+    await characteristic.startNotifications();
+
+    characteristic.addEventListener('characteristicvaluechanged', (event) => {
+      const value = parsePower(event.target.value);
+      updatePower(value);
+    });
+
+    // Guardar referencia al dispositivo y estado de conexión
+    powerDevice = device;
+    saveConnectionState('power', device.id);
+
+    // ✅ Una vez conectado y notificando, marcamos el botón como "conectado"
+    document.getElementById("powerConnectBtn").classList.add("connected");
+    console.log('Sensor de potencia conectado');
+
+    // Manejar desconexión
+    device.addEventListener('gattserverdisconnected', () => {
+      console.log('Dispositivo Power desconectado');
+      document.getElementById("powerConnectBtn").classList.remove("connected");
+      powerDevice = null;
+      clearConnectionState('power');
+    });
+
+  } catch (err) {
+    console.error('Error conectando Potencia:', err);
+    clearConnectionState('power');
+  }
+}
+
+//Conector Cadencia---------------------------------------------
+export async function connectRPM() {
+  try {
+    console.log("Buscando sensor de cadencia...");
+
+    const device = await navigator.bluetooth.requestDevice({
+      filters: [{ services: ['cycling_speed_and_cadence'] }]
+    });
+
+    const server = await device.gatt.connect();
+    const service = await server.getPrimaryService('cycling_speed_and_cadence');
+    const characteristic = await service.getCharacteristic('csc_measurement');
+
+    await characteristic.startNotifications();
+
+    characteristic.addEventListener('characteristicvaluechanged', (event) => {
+      const rpm = parseRPM(event.target.value);
+      if (rpm !== null) updateRPM(rpm);
+    });
+
+    // Guardar referencia al dispositivo y estado de conexión
+    rpmDevice = device;
+    saveConnectionState('rpm', device.id);
+
+    document.getElementById("rpmConnectBtn").classList.add("connected");
+    console.log('Sensor de cadencia conectado');
+
+    // Manejar desconexión
+    device.addEventListener('gattserverdisconnected', () => {
+      console.log('Dispositivo RPM desconectado');
+      document.getElementById("rpmConnectBtn").classList.remove("connected");
+      rpmDevice = null;
+      clearConnectionState('rpm');
+    });
+
+  } catch (err) {
+    console.error('Error conectando Cadencia:', err);
+    clearConnectionState('rpm');
+  }
+}
+

@@ -145,31 +145,146 @@ function setupActionButtons() {
     }
 }
 
-function handleShare() {
+async function createShareableImage(data, theme) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const width = 540;
+    const height = 480;
+
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    ctx.scale(dpr, dpr);
+
+    const colors = {
+        bg: theme === 'dark' ? '#333333' : '#F5F5F5',
+        fg: theme === 'dark' ? '#FFFFFF' : '#333333',
+        primary: theme === 'dark' ? '#F2C464' : '#367AF6',
+        secondary: theme === 'dark' ? '#A9A9A9' : '#5A5A5A',
+    };
+    const font = '"Courier New", Courier, monospace';
+
+    // Background
+    ctx.fillStyle = colors.bg;
+    ctx.fillRect(0, 0, width, height);
+
+    // Title
+    ctx.fillStyle = colors.primary;
+    ctx.font = `bold 26px ${font}`;
+    ctx.textAlign = 'center';
+    ctx.fillText('FreeBike Session', width / 2, 50);
+
+    // Main Stats (Distance, Time, Avg Speed)
+    const mainStats = [
+        { label: 'Distance', value: (data.distance || 0).toFixed(2), unit: 'km' },
+        { label: 'Time', value: formatElapsedTime(data.elapsedTime), unit: '' },
+        { label: 'Avg Speed', value: (data.speed?.avg || 0).toFixed(1), unit: 'km/h' }
+    ];
+
+    mainStats.forEach((stat, i) => {
+        const x = (width / 3) * (i + 0.5);
+        ctx.textAlign = 'center';
+
+        // Value
+        ctx.font = `bold 42px ${font}`;
+        ctx.fillStyle = colors.fg;
+        ctx.fillText(stat.value, x, 140);
+        
+        // Unit
+        if (stat.unit) {
+            ctx.font = `18px ${font}`;
+            ctx.fillStyle = colors.primary;
+            // Measure text width to position the unit correctly
+            const valueWidth = ctx.measureText(stat.value).width;
+            ctx.textAlign = 'left';
+            ctx.fillText(stat.unit, x + valueWidth / 2 + 5, 140);
+        }
+
+        // Label
+        ctx.font = `16px ${font}`;
+        ctx.fillStyle = colors.secondary;
+        ctx.textAlign = 'center';
+        ctx.fillText(stat.label, x, 165);
+    });
+
+    // Divider
+    ctx.beginPath();
+    ctx.moveTo(40, 210);
+    ctx.lineTo(width - 40, 210);
+    ctx.strokeStyle = colors.secondary;
+    ctx.globalAlpha = 0.3;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.globalAlpha = 1.0;
+
+    // Secondary Stats Grid
+    const secondaryStats = [
+        { label: 'Avg HR', value: data.bpm?.avg || 0, unit: 'bpm' },
+        { label: 'Max HR', value: data.bpm?.max || 0, unit: 'bpm' },
+        { label: 'Avg Power', value: data.power?.avg || 0, unit: 'W' },
+        { label: 'Max Power', value: data.power?.max || 0, unit: 'W' },
+        { label: 'Avg Cadence', value: data.rpm?.avg || 0, unit: 'rpm' },
+        { label: 'Max Cadence', value: data.rpm?.max || 0, unit: 'rpm' },
+    ];
+    
+    ctx.font = `22px ${font}`;
+    ctx.textAlign = 'center';
+    secondaryStats.forEach((stat, i) => {
+        const col = i % 2;
+        const row = Math.floor(i / 2);
+        const x = width / 4 * (col * 2 + 1);
+        const y = 260 + row * 70;
+
+        // Value & Unit
+        ctx.fillStyle = colors.fg;
+        ctx.fillText(stat.value, x, y);
+
+        ctx.fillStyle = colors.primary;
+        ctx.font = `16px ${font}`;
+        const valueWidth = ctx.measureText(stat.value).width;
+        ctx.textAlign = 'left';
+        ctx.fillText(stat.unit, x + valueWidth / 2 + 5, y);
+        
+        // Label
+        ctx.font = `14px ${font}`;
+        ctx.fillStyle = colors.secondary;
+        ctx.textAlign = 'center';
+        ctx.fillText(stat.label, x, y + 20);
+
+        ctx.font = `22px ${font}`; // Reset font for next value
+    });
+
+    return new Promise(resolve => {
+        canvas.toBlob(blob => {
+            resolve(blob);
+        }, 'image/png');
+    });
+}
+
+async function handleShare() {
     const data = sessionData;
-    const summaryText =
-`🚴‍♂️ FreeBike Session
+    const currentTheme = document.body.classList.contains('dark-theme') ? 'dark' : 'light';
+    const summaryText = `🚴‍♂️ FreeBike Session - Time: ${formatElapsedTime(data.elapsedTime)}, Distance: ${(data.distance || 0).toFixed(2)} km, Avg Speed: ${(data.speed?.avg || 0).toFixed(1)} km/h`;
 
-- Time: ${formatElapsedTime(data.elapsedTime)}
-- Distance: ${(data.distance ?? 0).toFixed(2)} km
-- Heart Rate: avg ${data.bpm?.avg ?? '--'} bpm (min ${data.bpm?.min ?? '--'}, max ${data.bpm?.max ?? '--'})
-- Power: avg ${data.power?.avg ?? '--'} W (min ${data.power?.min ?? '--'}, max ${data.power?.max ?? '--'})
-- Cadence: avg ${data.rpm?.avg ?? '--'} rpm (min ${data.rpm?.min ?? '--'}, max ${data.rpm?.max ?? '--'})
-- Speed: avg ${data.speed?.avg ?? '--'} km/h (min ${data.speed?.min ?? '--'}, max ${data.speed?.max ?? '--'})`;
+    try {
+        const imageBlob = await createShareableImage(data, currentTheme);
+        const file = new File([imageBlob], 'freebike-summary.png', { type: 'image/png' });
 
-    if (navigator.share) {
-        navigator.share({
-            title: 'My FreeBike Session',
-            text: summaryText
-        }).catch(error => {
-            // No mostrar error si el usuario simplemente cancela la acción
-            if (error.name !== 'AbortError') {
-                console.error('Error al usar Share API, intentando copiar:', error);
-                copyToClipboardWithAlert(summaryText);
-            }
-        });
-    } else {
-        // Usar copiar como fallback si Share API no está disponible
+        // Comprobar si se pueden compartir archivos
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+                title: 'My FreeBike Session',
+                text: summaryText,
+                files: [file],
+            });
+        } else {
+            // Fallback para navegadores que no pueden compartir archivos (ej. Firefox desktop)
+            console.log("File sharing not supported, falling back to text.");
+            copyToClipboardWithAlert(summaryText);
+        }
+    } catch (error) {
+        // Fallback si hay cualquier error durante la creación o compartición de la imagen
+        console.error('Error creating or sharing image:', error);
         copyToClipboardWithAlert(summaryText);
     }
 }

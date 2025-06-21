@@ -1,3 +1,5 @@
+import { calculateSpeedFromPower } from './physics.js';
+
 // ----------------------
 // UI Setup
 // ----------------------
@@ -7,73 +9,81 @@ let isRunning = false; // Esto debe estar fuera de la función
 const UPDATE_INTERVAL_MS = 3000; // 3 segundos
 
 const dataAggregator = {
-    bpm: { buffer: [], timer: null },
-    power: { buffer: [], timer: null },
-    rpm: { buffer: [], timer: null },
-    speed: { buffer: [], timer: null },
+    bpm: { buffer: [] },
+    power: { buffer: [] },
+    rpm: { buffer: [] },
+    speed: { buffer: [] },
 };
+let updateTimer = null;
 
-function flushBuffer(type) {
-    const aggregator = dataAggregator[type];
-    if (aggregator.buffer.length === 0) {
-        aggregator.timer = null;
-        return;
-    }
-
-    const avg = Math.round(aggregator.buffer.reduce((a, b) => a + b, 0) / aggregator.buffer.length);
-    aggregator.buffer = []; // Limpiar buffer
-
-    // Actualizar UI para sensores de conexión directa (HR, Power, RPM) siempre
-    switch (type) {
-        case 'bpm':
-            document.getElementById('hr-display').textContent = avg ?? '--';
-            break;
-        case 'power':
-            document.getElementById('power').textContent = avg ?? '--';
-            break;
-        case 'rpm':
-            document.getElementById('rpm').textContent = avg ?? '--';
-            break;
-    }
-
-    // Actualizar estadísticas y UI de GPS solo si se está grabando
-    if (window.isRecording && !window.isPaused) {
-        switch (type) {
-            case 'bpm':
-            case 'power':
-            case 'rpm':
-                // Guardar estadísticas para estos sensores
-                if (window.updateSessionStats) window.updateSessionStats(type, avg);
-                break;
-            case 'speed':
-                // Actualizar UI y estadísticas de velocidad
-                const elem = document.getElementById("gps-speed");
-                if (elem) {
-                    if (isRunning) {
-                        const pace = (avg > 0) ? 1000 / (avg * 60) : 0;
-                        const min = Math.floor(pace);
-                        const sec = Math.round((pace - min) * 60).toString().padStart(2, '0');
-                        elem.textContent = (pace > 0) ? `${min}:${sec}` : "--";
-                    } else {
-                        elem.textContent = `${(avg * 3.6).toFixed(1)}`;
-                    }
-                }
-                if (window.updateSessionStats) window.updateSessionStats('speed', avg * 3.6);
-                break;
+function flushAllBuffers() {
+    const avg = {};
+    for (const type in dataAggregator) {
+        const aggregator = dataAggregator[type];
+        if (aggregator.buffer.length > 0) {
+            avg[type] = Math.round(aggregator.buffer.reduce((a, b) => a + b, 0) / aggregator.buffer.length);
+            aggregator.buffer = [];
         }
     }
 
-    aggregator.timer = null; // Reiniciar timer
+    if (Object.keys(avg).length === 0) {
+        updateTimer = null;
+        return;
+    }
+
+    // Actualizar UI para sensores (HR, Power, RPM) siempre que haya datos
+    if (avg.bpm !== undefined) document.getElementById('hr-display').textContent = avg.bpm;
+    if (avg.power !== undefined) document.getElementById('power').textContent = avg.power;
+    if (avg.rpm !== undefined) document.getElementById('rpm').textContent = avg.rpm;
+
+    // --- Lógica de cálculo de velocidad ---
+    let finalSpeed_ms = (avg.speed !== undefined) ? avg.speed : 0;
+    // Si la velocidad GPS es muy baja (o inexistente) y hay potencia, calcularla.
+    if (finalSpeed_ms < 0.5 && (avg.power !== undefined && avg.power > 10)) {
+        finalSpeed_ms = calculateSpeedFromPower(avg.power);
+    }
+
+    // Actualizar la UI de velocidad siempre
+    updateSpeedDisplay(finalSpeed_ms);
+
+    // --- Guardar estadísticas solo si se está grabando ---
+    if (window.isRecording && !window.isPaused) {
+        if (avg.bpm !== undefined) window.updateSessionStats('bpm', avg.bpm);
+        if (avg.power !== undefined) window.updateSessionStats('power', avg.power);
+        if (avg.rpm !== undefined) window.updateSessionStats('rpm', avg.rpm);
+        
+        // Siempre guardar la velocidad final (sea de GPS o calculada)
+        window.updateSessionStats('speed', finalSpeed_ms * 3.6);
+    }
+
+    updateTimer = null; // Liberar el temporizador para el próximo ciclo
 }
 
 function aggregateAndSchedule(type, value) {
     if (value === null || typeof value === 'undefined' || !isFinite(value)) return;
     
-    const aggregator = dataAggregator[type];
-    aggregator.buffer.push(value);
+    dataAggregator[type].buffer.push(value);
 
-    if (!aggregator.timer) {
-        aggregator.timer = setTimeout(() => flushBuffer(type), UPDATE_INTERVAL_MS);
+    if (!updateTimer) {
+        updateTimer = setTimeout(flushAllBuffers, UPDATE_INTERVAL_MS);
+    }
+}
+
+function updateSpeedDisplay(speedInMps) {
+    const elem = document.getElementById("gps-speed");
+    if (!elem) return;
+
+    if (isRunning) { // Modo Correr (Pace)
+        if (speedInMps > 0.1) {
+            const pace = 1000 / (speedInMps * 60);
+            const min = Math.floor(pace);
+            const sec = Math.round((pace - min) * 60).toString().padStart(2, '0');
+            elem.textContent = `${min}:${sec}`;
+        } else {
+            elem.textContent = "--";
+        }
+    } else { // Modo Bici (Km/h)
+        elem.textContent = (speedInMps * 3.6).toFixed(1);
     }
 }
 
@@ -160,7 +170,6 @@ export function setupUI(connectHR, connectPower, connectRPM) {
     });
   }
 }
-
 
 // ----------------------
 // Actualizaciones UI

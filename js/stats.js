@@ -157,132 +157,34 @@ function handleShare() {
 - Cadence: avg ${data.rpm?.avg ?? '--'} rpm (min ${data.rpm?.min ?? '--'}, max ${data.rpm?.max ?? '--'})
 - Speed: avg ${data.speed?.avg ?? '--'} km/h (min ${data.speed?.min ?? '--'}, max ${data.speed?.max ?? '--'})`;
 
-    // Crear enlace de WhatsApp
-    const whatsappText = encodeURIComponent(summaryText);
-    const whatsappUrl = `https://wa.me/?text=${whatsappText}`;
-
-    // Mostrar opciones de compartir
-    const shareOptions = [
-        { name: 'WhatsApp', action: () => window.open(whatsappUrl, '_blank') },
-        { name: 'Compartir nativo', action: () => shareNative(summaryText) },
-        { name: 'Copiar al portapapeles', action: () => copyToClipboard(summaryText) }
-    ];
-
-    // Crear modal de opciones
-    showShareModal(shareOptions);
-}
-
-function shareNative(text) {
     if (navigator.share) {
         navigator.share({
             title: 'My FreeBike Session',
-            text: text
-        }).catch(error => console.error('Error sharing:', error));
+            text: summaryText
+        }).catch(error => {
+            // No mostrar error si el usuario simplemente cancela la acción
+            if (error.name !== 'AbortError') {
+                console.error('Error al usar Share API, intentando copiar:', error);
+                copyToClipboardWithAlert(summaryText);
+            }
+        });
     } else {
-        copyToClipboard(text);
+        // Usar copiar como fallback si Share API no está disponible
+        copyToClipboardWithAlert(summaryText);
     }
 }
 
-function copyToClipboard(text) {
+function copyToClipboardWithAlert(text) {
     if (navigator.clipboard) {
-        navigator.clipboard.writeText(text);
-        alert('Resumen copiado al portapapeles');
+        navigator.clipboard.writeText(text)
+            .then(() => alert('¡Resumen copiado al portapapeles!'))
+            .catch(err => {
+                console.error('Error al copiar:', err);
+                alert('No se pudo compartir ni copiar el resumen.');
+            });
     } else {
-        alert('No se pudo copiar al portapapeles');
+        alert('La función para compartir o copiar no está disponible en este navegador.');
     }
-}
-
-function showShareModal(options) {
-    // Crear modal
-    const modal = document.createElement('div');
-    modal.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.5);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10000;
-    `;
-
-    const content = document.createElement('div');
-    content.style.cssText = `
-        background: var(--card-bg-color, #fff);
-        border-radius: 12px;
-        padding: 1.5rem;
-        max-width: 300px;
-        width: 90%;
-        text-align: center;
-        border: 1px solid var(--border-color, #ddd);
-    `;
-
-    const title = document.createElement('h3');
-    title.textContent = 'Compartir sesión';
-    title.style.cssText = `
-        margin: 0 0 1rem 0;
-        color: var(--fg-color, #333);
-        font-size: 1.2rem;
-    `;
-
-    const buttonsContainer = document.createElement('div');
-    buttonsContainer.style.cssText = `
-        display: flex;
-        flex-direction: column;
-        gap: 0.8rem;
-    `;
-
-    options.forEach(option => {
-        const button = document.createElement('button');
-        button.textContent = option.name;
-        button.style.cssText = `
-            background: var(--primary-color, #007bff);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 0.8rem;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: opacity 0.3s;
-        `;
-        button.onclick = () => {
-            option.action();
-            document.body.removeChild(modal);
-        };
-        button.onmouseover = () => button.style.opacity = '0.8';
-        button.onmouseout = () => button.style.opacity = '1';
-        buttonsContainer.appendChild(button);
-    });
-
-    const cancelButton = document.createElement('button');
-    cancelButton.textContent = 'Cancelar';
-    cancelButton.style.cssText = `
-        background: transparent;
-        color: var(--secondary-color, #666);
-        border: 1px solid var(--border-color, #ddd);
-        border-radius: 8px;
-        padding: 0.8rem;
-        font-size: 1rem;
-        cursor: pointer;
-        margin-top: 0.5rem;
-        width: 100%;
-    `;
-    cancelButton.onclick = () => document.body.removeChild(modal);
-
-    content.appendChild(title);
-    content.appendChild(buttonsContainer);
-    content.appendChild(cancelButton);
-    modal.appendChild(content);
-    document.body.appendChild(modal);
-
-    // Cerrar al hacer clic fuera del modal
-    modal.onclick = (e) => {
-        if (e.target === modal) {
-            document.body.removeChild(modal);
-        }
-    };
 }
 
 function handleDownloadCSV() {

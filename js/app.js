@@ -249,11 +249,10 @@ function parseRPM(dataView) {
 }
 
 let lastPosition = null;
-let totalDistance = 0;
 
 export function resetGPSData() {
-    totalDistance = 0;
     lastPosition = null;
+    // La distancia se reinicia como parte de sessionStats en main.js
 }
 
 function toRad(deg) {
@@ -293,26 +292,23 @@ export function startGPS() {
         const deltaT = (current.timestamp - lastPosition.timestamp) / 1000;
         const deltaD = haversineDistance(lastPosition, current);
 
+        // Solo procesar si se está grabando
         if (deltaT > 0 && deltaD < 100 && window.isRecording && !window.isPaused) {
-          const speed = deltaD / deltaT; // m/s
-          totalDistance += deltaD;
-
-          const distanceElement = document.getElementById('gps-distance');
-
-          if (distanceElement) distanceElement.textContent = (totalDistance / 1000).toFixed(2) + ' km';
+          const speed_ms = deltaD / deltaT; // m/s
           
-          // Actualizar estadísticas de la sesión si existe la función
-          if (window.updateSessionStats) {
-            window.updateSessionStats('speed', speed * 3.6); // Convertir a km/h
-            // Actualizar distancia en las estadísticas de la sesión
-            if (window.sessionStats) {
-              window.sessionStats.distance = totalDistance / 1000; // Convertir a km
-            }
+          // Actualizar distancia en stats y en UI
+          if (window.sessionStats) {
+             window.sessionStats.distance += deltaD / 1000; // Acumular en km
+             
+             const distanceElement = document.getElementById('gps-distance');
+             if (distanceElement) {
+                distanceElement.textContent = window.sessionStats.distance.toFixed(2) + ' km';
+             }
           }
-
-          // Actualiza el UI de velocidad
-          if (speed !== null && isFinite(speed)) {
-            updateSpeed(speed); // Llama a la función de UI
+          
+          // Enviar velocidad al agregador de UI para promediar y mostrar
+          if (speed_ms !== null && isFinite(speed_ms)) {
+            updateSpeed(speed_ms);
           }
         }
       }

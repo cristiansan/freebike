@@ -151,20 +151,42 @@
           </button>
         </div>
 
+        <!-- Watts por hora -->
+        <div class="sensor-block">
+          <h2>Watts/h</h2>
+          <div id="watts-per-hour" class="value">--</div>
+          <button class="icon-button" id="wattsHourBtn" title="Reset Watts/h">
+            <img src="icons/bolt.svg" alt="Watts/h Icon" />
+          </button>
+        </div>
+
+        <!-- Velocidad del sensor -->
+        <div class="sensor-block">
+          <h2>Speed Sensor</h2>
+          <div id="sensor-speed" class="value">--</div>
+          <button class="icon-button" id="sensorSpeedBtn" title="Toggle Speed Sensor">
+            <img src="icons/speed.svg" alt="Speed Sensor Icon" />
+          </button>
+        </div>
+
+      </div>
+      
+      <!-- Botón Start / Grabando / Pausa / Stop -->
+      <div class="start-button-container">
+        <button class="icon-button" id="startStopBtn" title="Start Recording">
+          <span id="startStopLabel">▶️ Start</span>
+          <div class="hold-progress">
+            <svg class="hold-progress" width="36" height="36" viewBox="0 0 36 36" aria-hidden="true" focusable="false">
+              <!-- <circle class="progress-bg" cx="18" cy="18" r="16"></circle> -->
+              <!-- <circle class="progress-bar" cx="18" cy="18" r="16"></circle> -->
+            </svg>
+          </div>
+        </button>
       </div>
     </main>
 
     <footer class="app-footer">
-      <!-- Botón Start / Grabando / Pausa / Stop -->
-      <button class="icon-button" id="startStopBtn" title="Start Recording">
-        <span id="startStopLabel">▶️ Start</span>
-        <div class="hold-progress">
-          <svg class="hold-progress" width="36" height="36" viewBox="0 0 36 36" aria-hidden="true" focusable="false">
-            <!-- <circle class="progress-bg" cx="18" cy="18" r="16"></circle> -->
-            <!-- <circle class="progress-bar" cx="18" cy="18" r="16"></circle> -->
-          </svg>
-        </div>
-      </button>
+      <!-- Footer vacío ahora -->
     </footer>
   </div>
 

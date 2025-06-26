@@ -87,6 +87,8 @@ window.renderSessionCharts = function(sessionData) {
     renderChart('chart-power', 'Power', sessionData.power?.values, theme, primaryColor);
     renderChart('chart-rpm', 'Cadence', sessionData.rpm?.values, theme, primaryColor);
     renderChart('chart-speed', 'Km/h', sessionData.speed?.values, theme, primaryColor);
+    renderChart('chart-watts-per-hour', 'Watts/h', sessionData.wattsPerHour?.values, theme, primaryColor);
+    renderChart('chart-sensor-speed', 'Speed Sensor', sessionData.sensorSpeed?.values, theme, primaryColor);
 }
 
 window.addEventListener('themeChanged', (e) => {

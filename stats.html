@@ -118,7 +118,7 @@
 
   <div class="app-container">
     <header class="app-header">
-      <a href="index.html" class="back-arrow" title="Back to training">&lt;</a>
+      <a href="index.html" class="back-arrow" title="Back to training" onclick="exitSessionMode()">&lt;</a>
       <div class="theme-switcher">
         <label for="theme-toggle-checkbox" class="theme-toggle-label">
           <input type="checkbox" id="theme-toggle-checkbox">
@@ -169,6 +169,18 @@
                     <canvas id="chart-speed"></canvas>
                 </div>
             </div>
+            <div class="chart-block">
+                <h3 class="chart-title">Watts/h</h3>
+                <div class="chart-canvas-container">
+                    <canvas id="chart-watts-per-hour"></canvas>
+                </div>
+            </div>
+            <div class="chart-block">
+                <h3 class="chart-title">Speed Sensor</h3>
+                <div class="chart-canvas-container">
+                    <canvas id="chart-sensor-speed"></canvas>
+                </div>
+            </div>
         </div>
       </div>
 
@@ -177,6 +189,33 @@
 
   <script type="module" src="js/stats.js"></script>
   <script type="module" src="js/charts.js"></script>
+  <script>
+    // Función para salir del modo sesión antes de regresar al index
+    function exitSessionMode() {
+      // Salir del fullscreen si está activo
+      if (document.fullscreenElement) {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+          document.msExitFullscreen();
+        }
+      }
+      
+      // Desbloquear orientación
+      if (screen.orientation && screen.orientation.unlock) {
+        try {
+          screen.orientation.unlock();
+        } catch (err) {
+          console.log('No se pudo desbloquear orientación:', err);
+        }
+      }
+      
+      // Limpiar localStorage para asegurar que no se mantenga el modo sesión
+      localStorage.removeItem('sessionMode');
+    }
+  </script>
   <script>
     // Theme switcher logic
     function setupThemeSwitcher() {

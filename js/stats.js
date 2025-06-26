@@ -86,6 +86,24 @@ function displayResults(data) {
           <span class="stat-max">max: <b>${formatStat(data.speed?.max, 1)}</b></span>
         </div>
       </div>
+
+      <div class="summary-block sensor-block">
+        <h2>Watts/h</h2>
+        <div class="stat-main-value">${formatStat(data.wattsPerHour?.avg, 0)} <span class="stat-unit">Wh</span></div>
+        <div class="stat-minmax-row">
+          <span class="stat-min">min: <b>${formatStat(data.wattsPerHour?.min, 0)}</b></span>
+          <span class="stat-max">max: <b>${formatStat(data.wattsPerHour?.max, 0)}</b></span>
+        </div>
+      </div>
+
+      <div class="summary-block sensor-block">
+        <h2>Speed Sensor</h2>
+        <div class="stat-main-value">${formatStat(data.sensorSpeed?.avg, 1)} <span class="stat-unit">km/h</span></div>
+        <div class="stat-minmax-row">
+          <span class="stat-min">min: <b>${formatStat(data.sensorSpeed?.min, 1)}</b></span>
+          <span class="stat-max">max: <b>${formatStat(data.sensorSpeed?.max, 1)}</b></span>
+        </div>
+      </div>
     `;
 }
 
@@ -176,9 +194,9 @@ async function createShareableImage(data, theme) {
 
     // Main Stats (Distance, Time, Avg Speed)
     const mainStats = [
-        { label: 'Distance', value: (data.distance || 0).toFixed(2), unit: 'km' },
-        { label: 'Time', value: formatElapsedTime(data.elapsedTime), unit: '' },
-        { label: 'Avg Speed', value: (data.speed?.avg || 0).toFixed(1), unit: 'km/h' }
+        { label: 'Distance (km)', value: (data.distance || 0).toFixed(2) },
+        { label: 'Time', value: formatElapsedTime(data.elapsedTime) },
+        { label: 'Avg Speed (km/h)', value: (data.speed?.avg || 0).toFixed(1) }
     ];
 
     mainStats.forEach((stat, i) => {
@@ -189,16 +207,6 @@ async function createShareableImage(data, theme) {
         ctx.font = `bold 42px ${font}`;
         ctx.fillStyle = colors.fg;
         ctx.fillText(stat.value, x, 140);
-        
-        // Unit
-        if (stat.unit) {
-            ctx.font = `18px ${font}`;
-            ctx.fillStyle = colors.primary;
-            // Measure text width to position the unit correctly
-            const valueWidth = ctx.measureText(stat.value).width;
-            ctx.textAlign = 'left';
-            ctx.fillText(stat.unit, x + valueWidth / 2 + 5, 140);
-        }
 
         // Label
         ctx.font = `16px ${font}`;
@@ -219,31 +227,27 @@ async function createShareableImage(data, theme) {
 
     // Secondary Stats Grid
     const secondaryStats = [
-        { label: 'Avg HR', value: data.bpm?.avg || 0, unit: 'bpm' },
-        { label: 'Max HR', value: data.bpm?.max || 0, unit: 'bpm' },
-        { label: 'Avg Power', value: data.power?.avg || 0, unit: 'W' },
-        { label: 'Max Power', value: data.power?.max || 0, unit: 'W' },
-        { label: 'Avg Cadence', value: data.rpm?.avg || 0, unit: 'rpm' },
-        { label: 'Max Cadence', value: data.rpm?.max || 0, unit: 'rpm' },
+        { label: 'Avg HR (bpm)', value: data.bpm?.avg || 0 },
+        { label: 'Max HR (bpm)', value: data.bpm?.max || 0 },
+        { label: 'Avg Power (W)', value: data.power?.avg || 0 },
+        { label: 'Max Power (W)', value: data.power?.max || 0 },
+        { label: 'Avg Cadence (rpm)', value: data.rpm?.avg || 0 },
+        { label: 'Max Cadence (rpm)', value: data.rpm?.max || 0 },
+        { label: 'Avg Watts/h (Wh)', value: data.wattsPerHour?.avg || 0 },
+        { label: 'Sensor Speed (km/h)', value: data.sensorSpeed?.avg || 0 },
     ];
     
-    ctx.font = `22px ${font}`;
+    ctx.font = `20px ${font}`;
     ctx.textAlign = 'center';
     secondaryStats.forEach((stat, i) => {
         const col = i % 2;
         const row = Math.floor(i / 2);
         const x = width / 4 * (col * 2 + 1);
-        const y = 260 + row * 70;
+        const y = 250 + row * 60;
 
-        // Value & Unit
+        // Value
         ctx.fillStyle = colors.fg;
         ctx.fillText(stat.value, x, y);
-
-        ctx.fillStyle = colors.primary;
-        ctx.font = `16px ${font}`;
-        const valueWidth = ctx.measureText(stat.value).width;
-        ctx.textAlign = 'left';
-        ctx.fillText(stat.unit, x + valueWidth / 2 + 5, y);
         
         // Label
         ctx.font = `14px ${font}`;
@@ -251,7 +255,7 @@ async function createShareableImage(data, theme) {
         ctx.textAlign = 'center';
         ctx.fillText(stat.label, x, y + 20);
 
-        ctx.font = `22px ${font}`; // Reset font for next value
+        ctx.font = `20px ${font}`; // Reset font for next value
     });
 
     return new Promise(resolve => {
@@ -264,7 +268,7 @@ async function createShareableImage(data, theme) {
 async function handleShare() {
     const data = sessionData;
     const currentTheme = document.body.classList.contains('dark-theme') ? 'dark' : 'light';
-    const summaryText = `🚴‍♂️ FreeBike Session - Time: ${formatElapsedTime(data.elapsedTime)}, Distance: ${(data.distance || 0).toFixed(2)} km, Avg Speed: ${(data.speed?.avg || 0).toFixed(1)} km/h`;
+    const summaryText = `🚴‍♂️ FreeBike Session - Time: ${formatElapsedTime(data.elapsedTime)}, Distance: ${(data.distance || 0).toFixed(2)} km, Avg Speed: ${(data.speed?.avg || 0).toFixed(1)} km/h, Avg Power: ${(data.power?.avg || 0)} W, Avg HR: ${(data.bpm?.avg || 0)} bpm, Watts/h: ${(data.wattsPerHour?.avg || 0)} Wh`;
 
     try {
         const imageBlob = await createShareableImage(data, currentTheme);
@@ -305,7 +309,7 @@ function copyToClipboardWithAlert(text) {
 function handleDownloadCSV() {
     const data = sessionData;
     
-    const headers = ['timestamp', 'bpm', 'power', 'rpm', 'speed_kmh'];
+    const headers = ['timestamp', 'bpm', 'power', 'rpm', 'speed_kmh', 'watts_per_hour', 'sensor_speed_kmh'];
     
     // Create a map of timestamps to data points
     const dataMap = new Map();
@@ -317,7 +321,7 @@ function handleDownloadCSV() {
                 ? data.bpm.timestamps[index] 
                 : data.startTime.toMillis() + (index * 1000);
             if (!dataMap.has(timestamp)) {
-                dataMap.set(timestamp, { timestamp, bpm: '', power: '', rpm: '', speed: '' });
+                dataMap.set(timestamp, { timestamp, bpm: '', power: '', rpm: '', speed: '', wattsPerHour: '', sensorSpeed: '' });
             }
             dataMap.get(timestamp).bpm = value;
         });
@@ -330,7 +334,7 @@ function handleDownloadCSV() {
                 ? data.power.timestamps[index] 
                 : data.startTime.toMillis() + (index * 1000);
             if (!dataMap.has(timestamp)) {
-                dataMap.set(timestamp, { timestamp, bpm: '', power: '', rpm: '', speed: '' });
+                dataMap.set(timestamp, { timestamp, bpm: '', power: '', rpm: '', speed: '', wattsPerHour: '', sensorSpeed: '' });
             }
             dataMap.get(timestamp).power = value;
         });
@@ -343,7 +347,7 @@ function handleDownloadCSV() {
                 ? data.rpm.timestamps[index] 
                 : data.startTime.toMillis() + (index * 1000);
             if (!dataMap.has(timestamp)) {
-                dataMap.set(timestamp, { timestamp, bpm: '', power: '', rpm: '', speed: '' });
+                dataMap.set(timestamp, { timestamp, bpm: '', power: '', rpm: '', speed: '', wattsPerHour: '', sensorSpeed: '' });
             }
             dataMap.get(timestamp).rpm = value;
         });
@@ -356,9 +360,35 @@ function handleDownloadCSV() {
                 ? data.speed.timestamps[index] 
                 : data.startTime.toMillis() + (index * 1000);
             if (!dataMap.has(timestamp)) {
-                dataMap.set(timestamp, { timestamp, bpm: '', power: '', rpm: '', speed: '' });
+                dataMap.set(timestamp, { timestamp, bpm: '', power: '', rpm: '', speed: '', wattsPerHour: '', sensorSpeed: '' });
             }
             dataMap.get(timestamp).speed = value;
+        });
+    }
+    
+    // Add watts per hour data with actual timestamps
+    if (data.wattsPerHour?.values && data.wattsPerHour.values.length > 0) {
+        data.wattsPerHour.values.forEach((value, index) => {
+            const timestamp = data.wattsPerHour.timestamps && data.wattsPerHour.timestamps[index] 
+                ? data.wattsPerHour.timestamps[index] 
+                : data.startTime.toMillis() + (index * 1000);
+            if (!dataMap.has(timestamp)) {
+                dataMap.set(timestamp, { timestamp, bpm: '', power: '', rpm: '', speed: '', wattsPerHour: '', sensorSpeed: '' });
+            }
+            dataMap.get(timestamp).wattsPerHour = value;
+        });
+    }
+    
+    // Add sensor speed data with actual timestamps
+    if (data.sensorSpeed?.values && data.sensorSpeed.values.length > 0) {
+        data.sensorSpeed.values.forEach((value, index) => {
+            const timestamp = data.sensorSpeed.timestamps && data.sensorSpeed.timestamps[index] 
+                ? data.sensorSpeed.timestamps[index] 
+                : data.startTime.toMillis() + (index * 1000);
+            if (!dataMap.has(timestamp)) {
+                dataMap.set(timestamp, { timestamp, bpm: '', power: '', rpm: '', speed: '', wattsPerHour: '', sensorSpeed: '' });
+            }
+            dataMap.get(timestamp).sensorSpeed = value;
         });
     }
     
@@ -378,7 +408,9 @@ function handleDownloadCSV() {
             row.bpm || '',
             row.power || '',
             row.rpm || '',
-            row.speed || ''
+            row.speed || '',
+            row.wattsPerHour || '',
+            row.sensorSpeed || ''
         ];
         csvContent += csvRow.join(',') + '\n';
     });

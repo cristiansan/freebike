@@ -1,10 +1,13 @@
-import { setupUI } from './ui.js';
+import { setupUI, resetWattsPerHour } from './ui.js';
 import { connectHR, connectPower, connectRPM, startGPS, restoreConnections, resetGPSData } from './app.js';
 import { db } from './firebase.js';
 import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
 setupUI(connectHR, connectPower, connectRPM);
 startGPS(); // Activa el GPS al iniciar
+
+// Asegurar que no estamos en modo sesión al cargar la página principal
+document.body.classList.remove('session-mode');
 
 // Restaurar conexiones Bluetooth guardadas
 setTimeout(() => {
@@ -58,14 +61,48 @@ function releaseWakeLock() {
 
 // --- Activar modo pantalla completa ---
 function launchFullscreen() {
-  const el = document.documentElement;
-  if (el.requestFullscreen) {
-    el.requestFullscreen();
-  } else if (el.webkitRequestFullscreen) {
-    el.webkitRequestFullscreen();
-  } else if (el.msRequestFullscreen) {
-    el.msRequestFullscreen();
+  // En lugar de fullscreen total, solo usar viewport adjustments
+  // para mejor experiencia en móviles manteniendo las barras del sistema
+  
+  // Activar orientación landscape si está disponible
+  if (screen.orientation && screen.orientation.lock) {
+    try {
+      screen.orientation.lock('landscape').catch(err => {
+        console.log('No se pudo bloquear orientación:', err);
+      });
+    } catch (err) {
+      console.log('Screen orientation lock no disponible:', err);
+    }
   }
+  
+  // Aplicar clase CSS para ajustar el layout en modo sesión
+  document.body.classList.add('session-mode');
+}
+
+// --- Salir del modo pantalla completa ---
+function exitFullscreen() {
+  // Salir del fullscreen si está activo
+  if (document.fullscreenElement) {
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) {
+      document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) {
+      document.msExitFullscreen();
+    }
+  }
+  
+  // Desbloquear orientación
+  if (screen.orientation && screen.orientation.unlock) {
+    try {
+      screen.orientation.unlock();
+    } catch (err) {
+      console.log('No se pudo desbloquear orientación:', err);
+    }
+  }
+  
+  // Remover clase CSS del modo sesión
+  document.body.classList.remove('session-mode');
 }
 
 // --- Tiempo real de sesión ---
@@ -167,8 +204,10 @@ function handleClick() {
     
     // Resetear datos y UI al iniciar
     resetGPSData();
+    resetWattsPerHour();
     document.getElementById('gps-distance').textContent = '0.00 km';
     document.getElementById('gps-speed').textContent = '0.0';
+    document.getElementById('sensor-speed').textContent = '--';
 
     // Inicializar estadísticas de sesión
     window.sessionStats = {
@@ -176,6 +215,8 @@ function handleClick() {
       power: { values: [], timestamps: [], sum: 0, min: null, max: null },
       rpm: { values: [], timestamps: [], sum: 0, min: null, max: null },
       speed: { values: [], timestamps: [], sum: 0, min: null, max: null },
+      wattsPerHour: { values: [], timestamps: [], sum: 0, min: null, max: null },
+      sensorSpeed: { values: [], timestamps: [], sum: 0, min: null, max: null },
       distance: 0,
       startTime: window.startTime,
       endTime: null
@@ -274,6 +315,26 @@ async function startHoldToStop() {
           timestamps: window.sessionStats.speed.timestamps.slice(-maxArraySize)
         },
         
+        // Watts/h promedio, mínimo y máximo
+        wattsPerHour: {
+          avg: window.sessionStats.wattsPerHour.values.length > 0 ? Math.round(window.sessionStats.wattsPerHour.sum / window.sessionStats.wattsPerHour.values.length) : 0,
+          min: window.sessionStats.wattsPerHour.min || 0,
+          max: window.sessionStats.wattsPerHour.max || 0,
+          count: window.sessionStats.wattsPerHour.values.length,
+          values: window.sessionStats.wattsPerHour.values.slice(-maxArraySize),
+          timestamps: window.sessionStats.wattsPerHour.timestamps.slice(-maxArraySize)
+        },
+        
+        // Velocidad del sensor promedio, mínima y máxima
+        sensorSpeed: {
+          avg: window.sessionStats.sensorSpeed.values.length > 0 ? Math.round(window.sessionStats.sensorSpeed.sum / window.sessionStats.sensorSpeed.values.length * 10) / 10 : 0,
+          min: window.sessionStats.sensorSpeed.min || 0,
+          max: window.sessionStats.sensorSpeed.max || 0,
+          count: window.sessionStats.sensorSpeed.values.length,
+          values: window.sessionStats.sensorSpeed.values.slice(-maxArraySize),
+          timestamps: window.sessionStats.sensorSpeed.timestamps.slice(-maxArraySize)
+        },
+        
         startTime: window.sessionStats.startTime,
         endTime: window.sessionStats.endTime
       };
@@ -298,6 +359,8 @@ async function startHoldToStop() {
       document.getElementById('rpm').textContent = '--';
       document.getElementById('gps-speed').textContent = '--';
       document.getElementById('gps-distance').textContent = '--';
+      document.getElementById('watts-per-hour').textContent = '--';
+      document.getElementById('sensor-speed').textContent = '--';
       releaseWakeLock();
       updateButtonUI();
       console.log("Sesión detenida.");
@@ -307,7 +370,11 @@ async function startHoldToStop() {
       setTimeout(() => {
         startStopBtn.disabled = false;
       }, 2000);
-       // Redirigir a la página de resumen
+      
+      // Salir del modo fullscreen antes de redirigir
+      exitFullscreen();
+      
+      // Redirigir a la página de resumen
       setTimeout(() => {
         window.location.href = 'stats.html';
       }, 500);

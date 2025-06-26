@@ -33,7 +33,10 @@ function flushAllBuffers() {
 
     // Actualizar UI para sensores (HR, Power, RPM) siempre que haya datos
     if (avg.bpm !== undefined) document.getElementById('hr-display').textContent = avg.bpm;
-    if (avg.power !== undefined) document.getElementById('power').textContent = avg.power;
+    if (avg.power !== undefined) {
+        document.getElementById('power').textContent = avg.power;
+        updateWattsPerHour(avg.power); // Actualizar watts/h
+    }
     if (avg.rpm !== undefined) document.getElementById('rpm').textContent = avg.rpm;
 
     // --- Lógica de cálculo de velocidad ---
@@ -126,10 +129,16 @@ export function setupUI(connectHR, connectPower, connectRPM) {
   const speedBtn = document.getElementById("speedModeBtn");
   const speedIcon = document.getElementById("speedModeIcon");
   const speedTitle = document.getElementById("speed-title");
+  
+  // Nuevos botones
+  const wattsHourBtn = document.getElementById("wattsHourBtn");
+  const sensorSpeedBtn = document.getElementById("sensorSpeedBtn");
 
   if (hrBtn) hrBtn.addEventListener("click", connectHR);
   if (powerBtn) powerBtn.addEventListener("click", connectPower);
   if (rpmBtn) rpmBtn.addEventListener("click", connectRPM);
+  if (wattsHourBtn) wattsHourBtn.addEventListener("click", resetWattsPerHour);
+  if (sensorSpeedBtn) sensorSpeedBtn.addEventListener("click", toggleSensorSpeed);
 
   // Botón para cambiar entre modo bici / correr
   if (speedBtn && speedIcon && speedTitle) {
@@ -188,6 +197,103 @@ export function updateRPM(value) {
 
 export function updateSpeed(mps) {
   aggregateAndSchedule('speed', mps);
+}
+
+// Variables para watts/h y velocidad del sensor
+let wattsPerHourTotal = 0;
+let wattsPerHourStartTime = null;
+let sensorSpeedEnabled = false;
+let lastMotionTime = 0;
+
+export function updateWattsPerHour(powerValue) {
+  if (!window.isRecording || window.isPaused || !powerValue) return;
+  
+  if (!wattsPerHourStartTime) {
+    wattsPerHourStartTime = Date.now();
+  }
+  
+  const now = Date.now();
+  const timeElapsed = (now - wattsPerHourStartTime) / 1000 / 3600; // horas
+  
+  if (timeElapsed > 0) {
+    wattsPerHourTotal = powerValue * timeElapsed;
+    document.getElementById('watts-per-hour').textContent = Math.round(wattsPerHourTotal);
+    
+    // Guardar estadística
+    if (window.updateSessionStats) {
+      window.updateSessionStats('wattsPerHour', wattsPerHourTotal);
+    }
+  }
+}
+
+export function resetWattsPerHour() {
+  wattsPerHourTotal = 0;
+  wattsPerHourStartTime = null;
+  document.getElementById('watts-per-hour').textContent = '--';
+}
+
+export function updateSensorSpeed(speed) {
+  if (sensorSpeedEnabled) {
+    document.getElementById('sensor-speed').textContent = speed.toFixed(1);
+    
+    // Guardar estadística si estamos grabando
+    if (window.isRecording && !window.isPaused && window.updateSessionStats) {
+      window.updateSessionStats('sensorSpeed', speed);
+    }
+  }
+}
+
+function initSensorSpeed() {
+  if ('DeviceMotionEvent' in window) {
+    window.addEventListener('devicemotion', (event) => {
+      if (!sensorSpeedEnabled) return;
+      
+      const acceleration = event.acceleration;
+      if (acceleration && acceleration.x !== null) {
+        const now = Date.now();
+        if (now - lastMotionTime > 500) { // Actualizar cada 500ms
+          // Calcular velocidad basada en aceleración (aproximación)
+          const totalAcceleration = Math.sqrt(
+            acceleration.x * acceleration.x + 
+            acceleration.y * acceleration.y + 
+            acceleration.z * acceleration.z
+          );
+          
+          // Convertir a velocidad aproximada (esto es una estimación)
+          const estimatedSpeed = Math.max(0, (totalAcceleration - 9.8) * 3.6); // km/h
+          updateSensorSpeed(estimatedSpeed);
+          lastMotionTime = now;
+        }
+      }
+    });
+  }
+}
+
+function toggleSensorSpeed() {
+  sensorSpeedEnabled = !sensorSpeedEnabled;
+  const btn = document.getElementById('sensorSpeedBtn');
+  
+  if (sensorSpeedEnabled) {
+    btn.classList.add('connected');
+    // Solicitar permisos si es necesario
+    if (typeof DeviceMotionEvent.requestPermission === 'function') {
+      DeviceMotionEvent.requestPermission()
+        .then(permissionState => {
+          if (permissionState === 'granted') {
+            initSensorSpeed();
+          } else {
+            sensorSpeedEnabled = false;
+            btn.classList.remove('connected');
+            alert('Permisos de sensor de movimiento necesarios');
+          }
+        });
+    } else {
+      initSensorSpeed();
+    }
+  } else {
+    btn.classList.remove('connected');
+    document.getElementById('sensor-speed').textContent = '--';
+  }
 }
 
 

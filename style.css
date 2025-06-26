@@ -68,22 +68,31 @@ body {
   flex: 1;
   overflow-y: auto;
   padding: 1rem;
-  padding-bottom: 0.5rem;
+  padding-bottom: 0.3rem;
+  display: flex;
+  flex-direction: column;
 }
 
 .app-footer {
-  padding: 0.5rem 1rem;
+  padding: 0.3rem 1rem;
   padding-top: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 80px;
+  min-height: 20px;
 }
 
 .grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr); /* SIEMPRE 2 columnas */
-  gap: 1rem;
+  gap: 0.8rem; /* Reducir el gap para acomodar más elementos */
+}
+
+.start-button-container {
+  margin-top: 0.8rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .sensor-block {
@@ -92,7 +101,8 @@ body {
   border-radius: 8px;
   text-align: center;
   transition: background 0.3s ease;
-  padding: 1rem;
+  padding: 0.8rem;
+  min-height: 120px;
 }
 
 /* Estilos para los títulos en los bloques de sensores */
@@ -456,4 +466,110 @@ input:checked + .theme-toggle-slider:before {
 }
 #changelog-list li:last-child {
     border-bottom: none;
+}
+
+/* Estilos para el modo sesión - mejor layout sin fullscreen completo */
+body.session-mode {
+  /* Ocultar elementos innecesarios durante la sesión */
+}
+
+body.session-mode .app-header {
+  /* Hacer el header más compacto durante las sesiones */
+  padding: 0.3rem 1rem;
+  min-height: auto;
+}
+
+body.session-mode .main-content {
+  /* Optimizar el espacio del contenido principal */
+  padding: 0.5rem;
+  padding-bottom: 0.3rem;
+}
+
+body.session-mode .app-footer {
+  /* Hacer el footer más compacto */
+  padding: 0.3rem 1rem;
+  min-height: 60px;
+}
+
+body.session-mode .grid {
+  /* Reducir el gap entre elementos en modo sesión */
+  gap: 0.8rem;
+}
+
+body.session-mode .sensor-block {
+  /* Hacer los bloques más compactos */
+  padding: 0.8rem;
+}
+
+body.session-mode .value {
+  /* Ajustar el tamaño de los valores */
+  font-size: 1.8rem;
+  margin: 0.3rem 0;
+}
+
+body.session-mode #startStopBtn {
+  /* Hacer el botón principal más compacto */
+  height: 45px;
+  font-size: 1.3rem;
+  padding: 0.8rem;
+}
+
+/* Optimizaciones específicas para móviles */
+@media (max-width: 600px) {
+  .grid {
+    gap: 0.6rem;
+  }
+  
+  .sensor-block {
+    padding: 0.6rem;
+    min-height: 100px;
+  }
+  
+  .value {
+    font-size: 1.6rem;
+  }
+  
+  .start-button-container {
+    margin-top: 0.6rem;
+  }
+  
+  #startStopBtn {
+    height: 40px;
+    font-size: 1.2rem;
+  }
+}
+
+/* Optimizaciones específicas para móviles en modo sesión */
+@media (max-width: 600px) {
+  body.session-mode .app-header {
+    padding: 0.2rem 0.8rem;
+  }
+  
+  body.session-mode .main-content {
+    padding: 0.4rem;
+    padding-bottom: 0.2rem;
+  }
+  
+  body.session-mode .app-footer {
+    padding: 0.2rem 0.8rem;
+    min-height: 50px;
+  }
+  
+  body.session-mode .grid {
+    gap: 0.5rem;
+  }
+  
+  body.session-mode .sensor-block {
+    padding: 0.5rem;
+    min-height: 85px;
+  }
+  
+  body.session-mode .value {
+    font-size: 1.4rem;
+  }
+  
+  body.session-mode #startStopBtn {
+    height: 35px;
+    font-size: 1.1rem;
+  }
 }

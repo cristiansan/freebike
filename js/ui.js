@@ -35,6 +35,7 @@ function flushAllBuffers() {
     if (avg.bpm !== undefined) document.getElementById('hr-display').textContent = avg.bpm;
     if (avg.power !== undefined) {
         document.getElementById('power').textContent = avg.power;
+        console.log(`⚡ Potencia recibida: ${avg.power}W`);
         updateWattsPerHour(avg.power); // Actualizar watts/h
     }
     if (avg.rpm !== undefined) document.getElementById('rpm').textContent = avg.rpm;
@@ -206,18 +207,34 @@ let sensorSpeedEnabled = false;
 let lastMotionTime = 0;
 
 export function updateWattsPerHour(powerValue) {
-  if (!window.isRecording || window.isPaused || !powerValue) return;
+  if (!window.isRecording || window.isPaused || !powerValue || powerValue <= 0) {
+    console.log(`🔋 Watts/h no actualizado - Recording: ${window.isRecording}, Paused: ${window.isPaused}, Power: ${powerValue}`);
+    return;
+  }
   
   if (!wattsPerHourStartTime) {
     wattsPerHourStartTime = Date.now();
+    wattsPerHourTotal = 0; // Resetear al inicio
+    console.log(`🔋 Watts/h iniciado con ${powerValue}W`);
+    return; // No calcular en la primera llamada
   }
   
   const now = Date.now();
-  const timeElapsed = (now - wattsPerHourStartTime) / 1000 / 3600; // horas
+  const timeElapsedSeconds = (now - wattsPerHourStartTime) / 1000;
   
-  if (timeElapsed > 0) {
-    wattsPerHourTotal = powerValue * timeElapsed;
+  // Calcular energía acumulada: Watts × tiempo en horas = Watt-hora
+  const timeElapsedHours = timeElapsedSeconds / 3600;
+  const energyIncrement = powerValue * (timeElapsedHours);
+  
+  // Acumular energía total
+  if (timeElapsedHours > 0) {
+    wattsPerHourTotal += energyIncrement;
     document.getElementById('watts-per-hour').textContent = Math.round(wattsPerHourTotal);
+    
+    console.log(`🔋 Watts/h actualizado: +${energyIncrement.toFixed(2)}Wh, Total: ${wattsPerHourTotal.toFixed(2)}Wh`);
+    
+    // Actualizar el tiempo de referencia para el próximo cálculo
+    wattsPerHourStartTime = now;
     
     // Guardar estadística
     if (window.updateSessionStats) {

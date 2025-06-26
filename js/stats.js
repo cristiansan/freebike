@@ -88,7 +88,7 @@ function displayResults(data) {
       </div>
 
       <div class="summary-block sensor-block">
-        <h2>Watts/h</h2>
+        <h2>Energy (Wh)</h2>
         <div class="stat-main-value">${formatStat(data.wattsPerHour?.avg, 0)} <span class="stat-unit">Wh</span></div>
         <div class="stat-minmax-row">
           <span class="stat-min">min: <b>${formatStat(data.wattsPerHour?.min, 0)}</b></span>

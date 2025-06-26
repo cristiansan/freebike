@@ -252,7 +252,8 @@ let lastPosition = null;
 
 export function resetGPSData() {
     lastPosition = null;
-    // La distancia se reinicia como parte de sessionStats en main.js
+    totalDistance = 0;
+    console.log("🔄 GPS data reseteado");
 }
 
 function toRad(deg) {
@@ -273,53 +274,86 @@ function haversineDistance(pos1, pos2) {
   return R * c;
 }
 
+let totalDistance = 0;
+
 export function startGPS() {
   if (!navigator.geolocation) {
     console.error("GPS no disponible");
     return;
   }
 
+  console.log("🛰️ Iniciando GPS...");
+
   navigator.geolocation.watchPosition(
     (position) => {
       const coords = position.coords;
+      const accuracy = coords.accuracy;
+      
+      console.log(`📍 GPS - Lat: ${coords.latitude.toFixed(6)}, Lon: ${coords.longitude.toFixed(6)}, Precisión: ${accuracy}m`);
+
       const current = {
         latitude: coords.latitude,
         longitude: coords.longitude,
         timestamp: position.timestamp,
+        accuracy: accuracy
       };
 
       if (lastPosition) {
         const deltaT = (current.timestamp - lastPosition.timestamp) / 1000;
         const deltaD = haversineDistance(lastPosition, current);
+        
+        console.log(`📏 ΔT: ${deltaT.toFixed(1)}s, ΔD: ${deltaD.toFixed(1)}m, Precisión: ${accuracy}m`);
 
-        // Solo procesar si se está grabando
-        if (deltaT > 0 && deltaD < 100 && window.isRecording && !window.isPaused) {
-          const speed_ms = deltaD / deltaT; // m/s
+        // Filtros mejorados para GPS más preciso
+        if (deltaT > 0.5 && // Mínimo 0.5 segundos entre actualizaciones
+            deltaT < 60 &&  // Máximo 60 segundos (evitar saltos de tiempo)
+            deltaD < 200 && // Máximo 200m por actualización (ciclismo rápido ~70km/h)
+            deltaD > 0.5 && // Mínimo 0.5m (evitar ruido GPS)
+            accuracy < 50) { // Solo usar lecturas GPS con buena precisión (<50m)
           
-          // Actualizar distancia en stats y en UI
-          if (window.sessionStats) {
-             window.sessionStats.distance += deltaD / 1000; // Acumular en km
-             
-             const distanceElement = document.getElementById('gps-distance');
-             if (distanceElement) {
-                distanceElement.textContent = window.sessionStats.distance.toFixed(2) + ' km';
-             }
+          const speed_ms = deltaD / deltaT; // m/s
+          const speed_kmh = speed_ms * 3.6; // km/h
+          
+          console.log(`✅ GPS válido - Velocidad: ${speed_kmh.toFixed(1)} km/h, Distancia: +${deltaD.toFixed(1)}m`);
+          
+          // Actualizar distancia total solo si estamos grabando
+          if (window.isRecording && !window.isPaused) {
+            totalDistance += deltaD / 1000; // Acumular en km
+            
+            // Actualizar en sessionStats si existe
+            if (window.sessionStats) {
+              window.sessionStats.distance = totalDistance;
+            }
+            
+            const distanceElement = document.getElementById('gps-distance');
+            if (distanceElement) {
+              distanceElement.textContent = totalDistance.toFixed(2) + ' km';
+            }
+            
+            console.log(`📊 Distancia total: ${totalDistance.toFixed(3)} km`);
           }
           
-          // Enviar velocidad al agregador de UI para promediar y mostrar
-          if (speed_ms !== null && isFinite(speed_ms)) {
+          // Enviar velocidad al agregador de UI para promediar y mostrar (siempre)
+          if (speed_ms !== null && isFinite(speed_ms) && speed_ms > 0) {
             updateSpeed(speed_ms);
           }
+        } else {
+          console.log(`❌ GPS filtrado - ΔT: ${deltaT.toFixed(1)}s, ΔD: ${deltaD.toFixed(1)}m, Precisión: ${accuracy}m`);
         }
+      } else {
+        console.log("🎯 Primera posición GPS establecida");
       }
 
       lastPosition = current;
     },
-    (err) => console.error("Error GPS:", err),
+    (err) => {
+      console.error("❌ Error GPS:", err);
+      console.error("Código de error:", err.code, "Mensaje:", err.message);
+    },
     {
       enableHighAccuracy: true,
-      maximumAge: 1000,
-      timeout: 5000,
+      maximumAge: 2000, // Aumentar a 2 segundos para mejor precisión
+      timeout: 10000,   // Aumentar timeout a 10 segundos
     }
   );
 }

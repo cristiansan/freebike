@@ -144,9 +144,128 @@ function setupThemeSwitcher() {
   }
 }
 
+function setupHamburgerMenu() {
+  const hamburgerBtn = document.getElementById('hamburger-btn');
+  const sideMenu = document.getElementById('side-menu');
+  const sideMenuClose = document.getElementById('side-menu-close');
+  const sideMenuOverlay = document.getElementById('side-menu-overlay');
+
+  // Función para abrir el menú
+  const openMenu = () => {
+    sideMenu.classList.add('active');
+    sideMenuOverlay.classList.add('active');
+    hamburgerBtn.classList.add('active');
+    document.body.style.overflow = 'hidden'; // Evitar scroll del body
+  };
+
+  // Función para cerrar el menú
+  const closeMenu = () => {
+    sideMenu.classList.remove('active');
+    sideMenuOverlay.classList.remove('active');
+    hamburgerBtn.classList.remove('active');
+    document.body.style.overflow = 'auto'; // Restaurar scroll del body
+  };
+
+  // Event listeners
+  if (hamburgerBtn) {
+    hamburgerBtn.addEventListener('click', openMenu);
+  }
+
+  if (sideMenuClose) {
+    sideMenuClose.addEventListener('click', closeMenu);
+  }
+
+  if (sideMenuOverlay) {
+    sideMenuOverlay.addEventListener('click', closeMenu);
+  }
+
+  // Cerrar con tecla ESC
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && sideMenu.classList.contains('active')) {
+      closeMenu();
+    }
+  });
+
+  // Agregar funcionalidad a los elementos del menú
+  setupMenuItems();
+}
+
+function setupMenuItems() {
+  // Redirigir a página de estadísticas
+  const menuStats = document.getElementById('menu-stats');
+  if (menuStats) {
+    menuStats.addEventListener('click', (e) => {
+      e.preventDefault();
+      // Cerrar el menú primero
+      const sideMenu = document.getElementById('side-menu');
+      const sideMenuOverlay = document.getElementById('side-menu-overlay'); 
+      const hamburgerBtn = document.getElementById('hamburger-btn');
+      if (sideMenu) sideMenu.classList.remove('active');
+      if (sideMenuOverlay) sideMenuOverlay.classList.remove('active');
+      if (hamburgerBtn) hamburgerBtn.classList.remove('active');
+      document.body.style.overflow = 'auto';
+      
+      window.location.href = 'stats.html';
+    });
+  }
+
+  // Mostrar historial
+  const menuHistory = document.getElementById('menu-history');
+  if (menuHistory) {
+    menuHistory.addEventListener('click', (e) => {
+      e.preventDefault();
+      // Cerrar el menú primero
+      const sideMenu = document.getElementById('side-menu');
+      const sideMenuOverlay = document.getElementById('side-menu-overlay'); 
+      const hamburgerBtn = document.getElementById('hamburger-btn');
+      if (sideMenu) sideMenu.classList.remove('active');
+      if (sideMenuOverlay) sideMenuOverlay.classList.remove('active');
+      if (hamburgerBtn) hamburgerBtn.classList.remove('active');
+      document.body.style.overflow = 'auto';
+      
+      window.location.href = 'historia.html';
+    });
+  }
+
+  // Configuración
+  const menuSettings = document.getElementById('menu-settings');
+  if (menuSettings) {
+    menuSettings.addEventListener('click', (e) => {
+      e.preventDefault();
+      // Aquí puedes agregar la funcionalidad de configuración
+      alert('Funcionalidad de configuración - Por implementar');
+    });
+  }
+
+  // Acerca de
+  const menuAbout = document.getElementById('menu-about');
+  if (menuAbout) {
+    menuAbout.addEventListener('click', (e) => {
+      e.preventDefault();
+      // Cerrar el menú lateral primero
+      const sideMenu = document.getElementById('side-menu');
+      const sideMenuOverlay = document.getElementById('side-menu-overlay'); 
+      const hamburgerBtn = document.getElementById('hamburger-btn');
+      if (sideMenu) sideMenu.classList.remove('active');
+      if (sideMenuOverlay) sideMenuOverlay.classList.remove('active');
+      if (hamburgerBtn) hamburgerBtn.classList.remove('active');
+      document.body.style.overflow = 'auto';
+      
+      // Mostrar el changelog existente
+      const changelogModal = document.getElementById('changelog-modal');
+      if (changelogModal) {
+        changelogModal.style.display = 'flex';
+      }
+    });
+  }
+}
+
 export function setupUI(connectHR, connectPower, connectRPM) {
   // Setup theme
   setupThemeSwitcher();
+  
+  // Setup hamburger menu
+  setupHamburgerMenu();
 
   // Botones de conexión
   const hrBtn = document.getElementById("hrConnectBtn");
@@ -163,7 +282,7 @@ export function setupUI(connectHR, connectPower, connectRPM) {
   if (hrBtn) hrBtn.addEventListener("click", connectHR);
   if (powerBtn) powerBtn.addEventListener("click", connectPower);
   if (rpmBtn) rpmBtn.addEventListener("click", connectRPM);
-  if (wattsHourBtn) wattsHourBtn.addEventListener("click", resetWattsPerHour);
+  if (wattsHourBtn) wattsHourBtn.addEventListener('click', resetWattsPerHour);
   if (sensorSpeedBtn) sensorSpeedBtn.addEventListener("click", toggleSensorSpeed);
 
   // Botón para cambiar entre modo bici / correr

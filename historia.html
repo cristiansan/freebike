@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Historial de Sesiones - FreeBike</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Header layout - igual que en otras páginas */
+    .app-header > div {
+      flex: 1;
+    }
+
+    .version-section {
+      display: flex;
+      justify-content: flex-start;
+    }
+
+    .theme-switcher-center {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .empty-section {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .back-arrow {
+      font-size: 1.5rem;
+      color: var(--fg-color);
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .back-arrow:hover {
+      color: var(--primary-color);
+    }
+
+    /* Estilos para el historial */
+    .history-container {
+      padding: 1rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .history-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .history-title {
+      font-size: 1.5rem;
+      color: var(--primary-color);
+      margin: 0;
+    }
+
+    .sessions-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .session-card {
+      background-color: var(--card-bg-color);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1rem;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .session-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-color: var(--primary-color);
+    }
+
+    .session-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .session-date {
+      font-size: 1rem;
+      color: var(--fg-color);
+      font-weight: bold;
+    }
+
+    .session-time {
+      font-size: 0.9rem;
+      color: var(--secondary-color);
+    }
+
+    .session-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.8rem;
+    }
+
+    .stat-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem;
+      background-color: var(--bg-color);
+      border-radius: 6px;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      color: var(--secondary-color);
+      text-transform: uppercase;
+      font-weight: bold;
+    }
+
+    .stat-value {
+      font-size: 1rem;
+      color: var(--primary-color);
+      font-weight: bold;
+    }
+
+    .session-duration {
+      grid-column: 1 / -1;
+      background-color: var(--primary-color);
+      color: var(--bg-color);
+      text-align: center;
+      margin-top: 0.5rem;
+    }
+
+    .session-duration .stat-label {
+      color: var(--bg-color);
+      opacity: 0.8;
+    }
+
+    .session-duration .stat-value {
+      color: var(--bg-color);
+      font-size: 1.2rem;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: var(--secondary-color);
+      font-size: 1.1rem;
+    }
+
+    .no-sessions {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--secondary-color);
+    }
+
+    .no-sessions h3 {
+      color: var(--fg-color);
+      margin-bottom: 1rem;
+    }
+
+    .no-sessions p {
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+
+    .start-training-btn {
+      background-color: var(--primary-color);
+      color: var(--bg-color);
+      border: none;
+      border-radius: 8px;
+      padding: 0.8rem 1.5rem;
+      font-family: var(--font-main);
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: opacity 0.3s;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .start-training-btn:hover {
+      opacity: 0.9;
+    }
+
+    /* Responsive design */
+    @media (max-width: 600px) {
+      .session-stats {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+      }
+
+      .stat-item {
+        padding: 0.4rem;
+      }
+
+      .history-container {
+        padding: 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <div class="version-section">
+        <a href="index.html?nosplash=true" class="back-arrow" title="Volver al entrenamiento">&lt;</a>
+      </div>
+      
+      <!-- Theme switcher centrado -->
+      <div class="theme-switcher-center">
+        <label for="theme-toggle-checkbox" class="theme-toggle-label">
+          <input type="checkbox" id="theme-toggle-checkbox">
+          <span class="theme-toggle-slider"></span>
+        </label>
+      </div>
+      
+      <!-- Sección vacía para balance -->
+      <div class="empty-section"></div>
+    </header>
+
+    <main class="main-content">
+      <div class="history-container">
+        <div class="history-header">
+          <h1 class="history-title">📋 Historial de Sesiones</h1>
+        </div>
+        
+        <div id="sessions-container">
+          <div class="loading">Cargando sesiones...</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { db } from './js/firebase.js';
+    import { collection, query, orderBy, getDocs } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
+
+    // Setup theme switcher
+    function setupThemeSwitcher() {
+      const themeToggle = document.getElementById('theme-toggle-checkbox');
+      const body = document.body;
+
+      const applyTheme = (theme) => {
+        if (theme === 'dark') {
+          body.classList.add('dark-theme');
+          body.classList.remove('light-theme');
+          if (themeToggle) themeToggle.checked = true;
+        } else {
+          body.classList.add('light-theme');
+          body.classList.remove('dark-theme');
+          if (themeToggle) themeToggle.checked = false;
+        }
+      };
+
+      const savedTheme = localStorage.getItem('theme') || 'dark';
+      applyTheme(savedTheme);
+
+      if (themeToggle) {
+        themeToggle.addEventListener('change', () => {
+          const newTheme = themeToggle.checked ? 'dark' : 'light';
+          localStorage.setItem('theme', newTheme);
+          applyTheme(newTheme);
+        });
+      }
+    }
+
+    // Format elapsed time
+    function formatElapsedTime(elapsedMs) {
+      if (!elapsedMs) return "00:00";
+      const totalSeconds = Math.floor(elapsedMs / 1000);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      
+      if (hours > 0) {
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      } else {
+        return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      }
+    }
+
+    // Format date
+    function formatDate(timestamp) {
+      if (!timestamp) return "Fecha desconocida";
+      
+      let date;
+      if (timestamp.toDate) {
+        // Firestore Timestamp
+        date = timestamp.toDate();
+      } else if (timestamp.toMillis) {
+        // Firestore Timestamp with toMillis method
+        date = new Date(timestamp.toMillis());
+      } else {
+        // Regular Date or timestamp
+        date = new Date(timestamp);
+      }
+
+      const now = new Date();
+      const isToday = date.toDateString() === now.toDateString();
+      const isYesterday = date.toDateString() === new Date(now.getTime() - 24 * 60 * 60 * 1000).toDateString();
+
+      if (isToday) {
+        return `Hoy ${date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`;
+      } else if (isYesterday) {
+        return `Ayer ${date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`;
+      } else {
+        return date.toLocaleDateString('es-ES', { 
+          day: '2-digit', 
+          month: '2-digit', 
+          year: 'numeric',
+          hour: '2-digit', 
+          minute: '2-digit' 
+        });
+      }
+    }
+
+    // Create session card
+    function createSessionCard(sessionData, sessionId) {
+      const card = document.createElement('div');
+      card.className = 'session-card';
+      card.onclick = () => {
+        // Redirect to stats page for this specific session
+        window.location.href = `stats.html?session=${sessionId}`;
+      };
+
+      const sessionDate = sessionData.createdAt || sessionData.startTime;
+      const elapsedTime = sessionData.elapsedTime || 0;
+      const distance = sessionData.distance || 0;
+      const avgSpeed = sessionData.speed?.avg || 0;
+      const avgPower = sessionData.power?.avg || 0;
+      const avgHR = sessionData.bpm?.avg || 0;
+
+      card.innerHTML = `
+        <div class="session-header">
+          <div class="session-date">${formatDate(sessionDate)}</div>
+        </div>
+        <div class="session-stats">
+          <div class="stat-item">
+            <span class="stat-label">Distancia</span>
+            <span class="stat-value">${distance.toFixed(2)} km</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Velocidad</span>
+            <span class="stat-value">${avgSpeed.toFixed(1)} km/h</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Potencia</span>
+            <span class="stat-value">${avgPower} W</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">FC</span>
+            <span class="stat-value">${avgHR} bpm</span>
+          </div>
+          <div class="stat-item session-duration">
+            <span class="stat-label">Duración</span>
+            <span class="stat-value">${formatElapsedTime(elapsedTime)}</span>
+          </div>
+        </div>
+      `;
+
+      return card;
+    }
+
+    // Load sessions from Firebase
+    async function loadSessions() {
+      try {
+        const q = query(collection(db, 'sesiones'), orderBy('createdAt', 'desc'));
+        const snapshot = await getDocs(q);
+        
+        const container = document.getElementById('sessions-container');
+
+        if (snapshot.empty) {
+          container.innerHTML = `
+            <div class="no-sessions">
+              <h3>📭 No hay sesiones registradas</h3>
+              <p>Cuando completes tu primera sesión de entrenamiento, aparecerá aquí.</p>
+              <a href="index.html?nosplash=true" class="start-training-btn">🚴‍♂️ Comenzar Entrenamiento</a>
+            </div>
+          `;
+          return;
+        }
+
+        const sessionsList = document.createElement('div');
+        sessionsList.className = 'sessions-list';
+
+        snapshot.forEach((doc) => {
+          const sessionData = doc.data();
+          const sessionCard = createSessionCard(sessionData, doc.id);
+          sessionsList.appendChild(sessionCard);
+        });
+
+        container.innerHTML = '';
+        container.appendChild(sessionsList);
+
+      } catch (error) {
+        console.error("Error al cargar sesiones:", error);
+        const container = document.getElementById('sessions-container');
+        container.innerHTML = `
+          <div class="no-sessions">
+            <h3>❌ Error al cargar sesiones</h3>
+            <p>No se pudieron cargar las sesiones. Verifica tu conexión a internet.</p>
+            <button class="start-training-btn" onclick="loadSessions()">🔄 Reintentar</button>
+          </div>
+        `;
+      }
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', () => {
+      setupThemeSwitcher();
+      loadSessions();
+    });
+
+    // Make loadSessions available globally for retry button
+    window.loadSessions = loadSessions;
+  </script>
+</body>
+</html> 

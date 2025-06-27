@@ -1,22 +1,44 @@
 console.log("🚀 stats.js cargado correctamente");
 
 import { db } from './firebase.js';
-import { collection, query, orderBy, limit, getDocs } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
+import { collection, query, orderBy, limit, getDocs, doc, getDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
 
 let sessionData = null; // Store session data globally in this module
+let currentSessionId = null; // Store current session ID for deletion
 
 async function loadSummary() {
   try {
-    const q = query(collection(db, 'sesiones'), orderBy('createdAt', 'desc'), limit(1));
-    const snapshot = await getDocs(q);
+    // Check if we have a specific session ID in the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session');
     
-    if (snapshot.empty) {
-      showNoDataMessage();
-      if (window.renderSessionCharts) window.renderSessionCharts({});
-      return;
-    }
+    if (sessionId) {
+      // Load specific session
+      const sessionDoc = doc(db, 'sesiones', sessionId);
+      const sessionSnapshot = await getDoc(sessionDoc);
+      
+      if (!sessionSnapshot.exists()) {
+        showErrorMessage('Sesión no encontrada');
+        return;
+      }
+      
+      sessionData = sessionSnapshot.data();
+      currentSessionId = sessionId; // Store the session ID
+    } else {
+      // Load latest session (default behavior)
+      const q = query(collection(db, 'sesiones'), orderBy('createdAt', 'desc'), limit(1));
+      const snapshot = await getDocs(q);
+      
+      if (snapshot.empty) {
+        showNoDataMessage();
+        if (window.renderSessionCharts) window.renderSessionCharts({});
+        return;
+      }
 
-    sessionData = snapshot.docs[0].data();
+      sessionData = snapshot.docs[0].data();
+      currentSessionId = snapshot.docs[0].id; // Store the session ID
+    }
+    
     displayResults(sessionData);
     
     // Initial chart render
@@ -117,12 +139,12 @@ function showNoDataMessage() {
   `;
 }
 
-function showErrorMessage() {
+function showErrorMessage(message) {
   const summary = document.getElementById('summary');
   summary.innerHTML = `
     <div class="summary-block sensor-block" style="grid-column: 1 / -1; text-align: center;">
       <h2>Error loading data</h2>
-      <p>Check your connection and try again.</p>
+      <p>${message || 'Check your connection and try again.'}</p>
     </div>
   `;
 }
@@ -143,10 +165,12 @@ function formatElapsedTime(milliseconds) {
 function setupActionButtons() {
     const shareBtn = document.getElementById('share-btn');
     const downloadBtn = document.getElementById('download-csv-btn');
+    const deleteBtn = document.getElementById('delete-session-btn');
 
-    if (!sessionData) {
+    if (!sessionData || !currentSessionId) {
         if(shareBtn) shareBtn.disabled = true;
         if(downloadBtn) downloadBtn.disabled = true;
+        if(deleteBtn) deleteBtn.disabled = true;
         return;
     }
 
@@ -160,6 +184,9 @@ function setupActionButtons() {
     }
     if (downloadBtn) {
         downloadBtn.addEventListener('click', handleDownloadCSV);
+    }
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', handleDeleteSession);
     }
 }
 
@@ -427,6 +454,112 @@ function handleDownloadCSV() {
     document.body.removeChild(link);
 }
 
+async function handleDeleteSession() {
+    if (!currentSessionId) {
+        showDeleteMessage('No se puede borrar la sesión: ID no encontrado', 'error');
+        return;
+    }
+
+    // Mostrar modal de confirmación
+    const modal = document.getElementById('delete-confirmation-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+function setupDeleteModal() {
+    const modal = document.getElementById('delete-confirmation-modal');
+    const cancelBtn = document.getElementById('cancel-delete-btn');
+    const confirmBtn = document.getElementById('confirm-delete-btn');
+
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+            if (modal) modal.style.display = 'none';
+        });
+    }
+
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', async () => {
+            if (modal) modal.style.display = 'none';
+            await performDeleteSession();
+        });
+    }
+
+    // Cerrar modal al hacer clic fuera
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    }
+}
+
+async function performDeleteSession() {
+    try {
+        // Mostrar estado de carga
+        const deleteBtn = document.getElementById('delete-session-btn');
+        if (deleteBtn) {
+            deleteBtn.disabled = true;
+            deleteBtn.textContent = '🔄 Borrando...';
+        }
+
+        // Borrar la sesión de Firebase
+        await deleteDoc(doc(db, 'sesiones', currentSessionId));
+        
+        console.log('✅ Sesión borrada exitosamente');
+        
+        // Redirigir al historial después de un breve delay
+        showDeleteMessage('Sesión borrada exitosamente', 'success');
+        setTimeout(() => {
+            window.location.href = 'historia.html';
+        }, 1500);
+        
+    } catch (error) {
+        console.error('❌ Error al borrar sesión:', error);
+        showDeleteMessage('Error al borrar la sesión. Inténtalo de nuevo.', 'error');
+        
+        // Restaurar el botón
+        const deleteBtn = document.getElementById('delete-session-btn');
+        if (deleteBtn) {
+            deleteBtn.disabled = false;
+            deleteBtn.textContent = '🗑️ Borrar Sesión';
+        }
+    }
+}
+
+function showDeleteMessage(message, type = 'info') {
+    // Crear un toast/mensaje temporal
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        color: white;
+        font-weight: bold;
+        z-index: 10000;
+        transition: all 0.3s ease;
+        ${type === 'success' ? 'background-color: #28a745;' : 
+          type === 'error' ? 'background-color: #dc3545;' : 
+          'background-color: #007bff;'}
+    `;
+    toast.textContent = message;
+    
+    document.body.appendChild(toast);
+    
+    // Eliminar después de 3 segundos
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => {
+            if (document.body.contains(toast)) {
+                document.body.removeChild(toast);
+            }
+        }, 300);
+    }, 3000);
+}
+
 export function shareSummary() {
   alert("Función de compartir no implementada aún");
 }
@@ -438,6 +571,7 @@ export function downloadCSV() {
 document.addEventListener('DOMContentLoaded', () => {
     loadSummary().then(() => {
         setupActionButtons();
+        setupDeleteModal();
     });
 });
 

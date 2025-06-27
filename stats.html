@@ -8,6 +8,28 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
     /* Estilos específicos que no están en style.css o que necesitan override */
+    
+    /* Header layout - igual que en index.html */
+    .app-header > div {
+      flex: 1;
+    }
+
+    .version-section {
+      display: flex;
+      justify-content: flex-start;
+    }
+
+    .theme-switcher-center {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .empty-section {
+      display: flex;
+      justify-content: flex-end;
+    }
+    
     .tabs {
       display: flex;
       justify-content: center;
@@ -91,6 +113,7 @@
         justify-content: center;
         gap: 1rem;
         margin-top: 1.5rem;
+        flex-wrap: wrap;
     }
     .action-button {
         background-color: var(--primary-color);
@@ -112,19 +135,66 @@
         cursor: not-allowed;
         opacity: 0.5;
     }
+    .action-button.delete-btn {
+        background-color: #dc3545;
+    }
+    .action-button.delete-btn:hover {
+        background-color: #c82333;
+        opacity: 1;
+    }
+    
+    /* Responsive actions */
+    @media (max-width: 600px) {
+      .actions-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.8rem;
+      }
+      .action-button {
+        width: 100%;
+        max-width: 200px;
+      }
+    }
+
+    /* Modal de confirmación */
+    .modal-buttons {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .modal-buttons .action-button {
+      flex: 1;
+      margin: 0;
+    }
+
+    @media (max-width: 600px) {
+      .modal-buttons {
+        flex-direction: column;
+        gap: 0.8rem;
+      }
+    }
   </style>
 </head>
 <body>
 
   <div class="app-container">
     <header class="app-header">
-      <a href="index.html" class="back-arrow" title="Back to training" onclick="exitSessionMode()">&lt;</a>
-      <div class="theme-switcher">
+      <div class="version-section">
+        <a href="index.html?nosplash=true" class="back-arrow" title="Back to training" onclick="exitSessionMode()">&lt;</a>
+      </div>
+      
+      <!-- Theme switcher movido al centro -->
+      <div class="theme-switcher-center">
         <label for="theme-toggle-checkbox" class="theme-toggle-label">
           <input type="checkbox" id="theme-toggle-checkbox">
           <span class="theme-toggle-slider"></span>
         </label>
       </div>
+      
+      <!-- Sección vacía para balance -->
+      <div class="empty-section"></div>
     </header>
 
     <main class="main-content">
@@ -140,6 +210,7 @@
         <div class="actions-container">
             <button id="share-btn" class="action-button">Share</button>
             <button id="download-csv-btn" class="action-button">Download CSV</button>
+            <button id="delete-session-btn" class="action-button delete-btn">🗑️ Borrar Sesión</button>
         </div>
       </div>
 
@@ -185,6 +256,19 @@
       </div>
 
     </main>
+  </div>
+
+  <!-- Modal de confirmación para borrar sesión -->
+  <div id="delete-confirmation-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <h2>🗑️ Borrar Sesión</h2>
+      <p>¿Estás seguro de que quieres borrar esta sesión?</p>
+      <p><strong>Esta acción no se puede deshacer.</strong></p>
+      <div class="modal-buttons">
+        <button id="cancel-delete-btn" class="action-button">Cancelar</button>
+        <button id="confirm-delete-btn" class="action-button delete-btn">🗑️ Borrar</button>
+      </div>
+    </div>
   </div>
 
   <script type="module" src="js/stats.js"></script>

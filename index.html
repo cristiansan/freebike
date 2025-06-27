@@ -92,13 +92,45 @@
       <div class="version-section">
         <a href="#" id="version-link">v1.7</a>
       </div>
-      <div class="theme-switcher">
+      
+      <!-- Theme switcher movido al centro -->
+      <div class="theme-switcher-center">
         <label for="theme-toggle-checkbox" class="theme-toggle-label">
           <input type="checkbox" id="theme-toggle-checkbox">
           <span class="theme-toggle-slider"></span>
         </label>
       </div>
+      
+      <!-- Botón hamburguesa en lugar del theme switcher -->
+      <div class="hamburger-menu">
+        <button class="hamburger-btn" id="hamburger-btn" title="Menu">
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+        </button>
+      </div>
     </header>
+
+    <!-- Menú lateral -->
+    <div class="side-menu" id="side-menu">
+      <div class="side-menu-content">
+        <div class="side-menu-header">
+          <h3>Menú</h3>
+          <button class="side-menu-close" id="side-menu-close">×</button>
+        </div>
+        <div class="side-menu-body">
+          <ul class="menu-items">
+            <li><a href="#" id="menu-stats">📊 Estadísticas</a></li>
+            <li><a href="#" id="menu-history">📝 Historial</a></li>
+            <li><a href="#" id="menu-settings">⚙️ Configuración</a></li>
+            <li><a href="#" id="menu-about">ℹ️ Acerca de</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Overlay para cerrar el menú -->
+    <div class="side-menu-overlay" id="side-menu-overlay"></div>
 
     <main class="main-content">
       <div class="grid">
@@ -264,12 +296,25 @@
   <script>
     // Ocultar splash automáticamente
     window.addEventListener('DOMContentLoaded', function() {
-      setTimeout(function() {
-        document.getElementById('splash').classList.add('hide');
+      // Verificar si se debe omitir el splash screen
+      const urlParams = new URLSearchParams(window.location.search);
+      const noSplash = urlParams.get('nosplash') === 'true';
+      
+      if (noSplash) {
+        // Ocultar splash inmediatamente
+        document.getElementById('splash').style.display = 'none';
+        // Limpiar el parámetro de la URL
+        const newUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+      } else {
+        // Mostrar splash normalmente
         setTimeout(function() {
-          document.getElementById('splash').style.display = 'none';
-        }, 700);
-      }, 1800); // Puedes ajustar el tiempo (milisegundos)
+          document.getElementById('splash').classList.add('hide');
+          setTimeout(function() {
+            document.getElementById('splash').style.display = 'none';
+          }, 700);
+        }, 1800); // Puedes ajustar el tiempo (milisegundos)
+      }
     });
   </script>
 </body>

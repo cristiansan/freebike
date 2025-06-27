@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚙️ Panel de Control - FreeBike</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .control-panel-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        
+        .panel-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .panel-title {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin: 0 0 0.5rem 0;
+        }
+        
+        .panel-subtitle {
+            color: var(--secondary-color);
+            font-size: 1rem;
+        }
+        
+        .sections-nav {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .section-btn {
+            background: none;
+            border: none;
+            color: var(--secondary-color);
+            font-family: var(--font-main);
+            font-size: 1.1rem;
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .section-btn.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+        
+        .section-btn:hover {
+            color: var(--primary-color);
+        }
+        
+        .section-content {
+            display: none;
+        }
+        
+        .section-content.active {
+            display: block;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .info-card {
+            background-color: var(--card-bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        
+        .info-card h3 {
+            color: var(--primary-color);
+            margin: 0 0 1rem 0;
+            font-size: 1.2rem;
+        }
+        
+        .info-card p {
+            margin: 0.5rem 0;
+            color: var(--fg-color);
+        }
+        
+        .info-card strong {
+            color: var(--primary-color);
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            background-color: var(--primary-color);
+            color: var(--bg-color);
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: var(--font-main);
+            font-size: 1rem;
+            font-weight: bold;
+            transition: opacity 0.3s;
+        }
+        
+        .action-btn:hover {
+            opacity: 0.9;
+        }
+        
+        .action-btn.danger {
+            background-color: #dc3545;
+        }
+        
+        .action-btn.danger:hover {
+            background-color: #c82333;
+            opacity: 1;
+        }
+        
+        .devices-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--card-bg-color);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            margin-top: 1rem;
+        }
+        
+        .devices-table th,
+        .devices-table td {
+            padding: 0.8rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .devices-table th {
+            background-color: var(--primary-color);
+            color: var(--bg-color);
+            font-weight: bold;
+        }
+        
+        .devices-table td {
+            color: var(--fg-color);
+        }
+        
+        .devices-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .device-status {
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .device-status.online {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .device-status.offline {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--secondary-color);
+        }
+        
+        .mini-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .mini-stat {
+            background-color: var(--card-bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .mini-stat-number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 0 0 0.3rem 0;
+        }
+        
+        .mini-stat-label {
+            color: var(--secondary-color);
+            font-size: 0.8rem;
+        }
+        
+        @media (max-width: 600px) {
+            .sections-nav {
+                flex-direction: column;
+            }
+            
+            .section-btn {
+                padding: 0.6rem;
+                border-bottom: none;
+                border-right: 3px solid transparent;
+            }
+            
+            .section-btn.active {
+                border-right-color: var(--primary-color);
+                border-bottom: none;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .action-btn {
+                width: 100%;
+                max-width: 250px;
+            }
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <div class="app-container">
+        <header class="app-header">
+            <div class="version-section">
+                <a href="index.html?nosplash=true" class="back-arrow" title="Volver al inicio">&lt;</a>
+            </div>
+            
+            <div class="theme-switcher-center">
+                <label for="theme-toggle-checkbox" class="theme-toggle-label">
+                    <input type="checkbox" id="theme-toggle-checkbox">
+                    <span class="theme-toggle-slider"></span>
+                </label>
+            </div>
+            
+            <div class="empty-section"></div>
+        </header>
+
+        <main class="main-content">
+            <div class="control-panel-container">
+                <div class="panel-header">
+                    <h1 class="panel-title">⚙️ Panel de Control</h1>
+                    <p class="panel-subtitle">Administración y monitoreo de FreeBike</p>
+                    <div id="panel-debug" style="
+                        background-color: var(--bg-color);
+                        border: 1px solid var(--border-color);
+                        border-radius: 8px;
+                        padding: 0.5rem;
+                        margin-top: 1rem;
+                        font-size: 0.8rem;
+                        color: var(--secondary-color);
+                        text-align: center;
+                        font-family: monospace;
+                    ">
+                        🔄 Cargando panel de control...
+                    </div>
+                </div>
+
+                <!-- Navegación de secciones -->
+                <div class="sections-nav">
+                    <button class="section-btn active" data-section="contador">📊 Contador</button>
+                    <button class="section-btn" data-section="estadisticas">📈 Estadísticas</button>
+                    <button class="section-btn" data-section="dispositivos">📱 Dispositivos</button>
+                </div>
+
+                <!-- Sección Contador -->
+                <div id="contador" class="section-content active">
+                    <div class="info-grid">
+                        <div class="info-card">
+                            <h3>🔍 Estado del Contador</h3>
+                            <div id="contador-estado">Cargando...</div>
+                        </div>
+                        
+                        <div class="info-card">
+                            <h3>📊 Información de tu Visita</h3>
+                            <div id="info-visita">Cargando...</div>
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="action-btn" onclick="location.reload()">
+                            🔄 Recargar Página
+                        </button>
+                        
+                        <button class="action-btn danger" onclick="localStorage.clear(); location.reload()">
+                            🗑️ Borrar Datos y Recargar
+                        </button>
+                    </div>
+                    
+                    <div class="info-card">
+                        <h3>ℹ️ Cómo funciona</h3>
+                        <p><strong>Visitantes únicos:</strong> El contador solo se incrementa para visitantes únicos.</p>
+                        <p><strong>Recargas:</strong> Si recargas la página, NO se incrementará (a menos que borres el localStorage).</p>
+                        <p><strong>Tiempo:</strong> Se cuenta como "visitante único" solo la primera vez que visitas desde este navegador, o después de 24 horas.</p>
+                    </div>
+                </div>
+
+                <!-- Sección Estadísticas -->
+                <div id="estadisticas" class="section-content">
+                    <div class="loading" id="stats-loading">
+                        🔄 Cargando estadísticas...
+                    </div>
+                    
+                    <div id="stats-content" style="display: none;">
+                        <div class="mini-stats">
+                            <div class="mini-stat">
+                                <div class="mini-stat-number" id="total-unique-visitors">-</div>
+                                <div class="mini-stat-label">Visitantes Únicos</div>
+                            </div>
+                            <div class="mini-stat">
+                                <div class="mini-stat-number" id="today-unique-visitors">-</div>
+                                <div class="mini-stat-label">Únicos Hoy</div>
+                            </div>
+                            <div class="mini-stat">
+                                <div class="mini-stat-number" id="total-page-views">-</div>
+                                <div class="mini-stat-label">Total Page Views</div>
+                            </div>
+                            <div class="mini-stat">
+                                <div class="mini-stat-number" id="mobile-percentage">-</div>
+                                <div class="mini-stat-label">% Móviles</div>
+                            </div>
+                            <div class="mini-stat">
+                                <div class="mini-stat-number" id="top-traffic-source">-</div>
+                                <div class="mini-stat-label">Fuente Principal</div>
+                            </div>
+                            <div class="mini-stat">
+                                <div class="mini-stat-number" id="total-devices">-</div>
+                                <div class="mini-stat-label">Dispositivos Registrados</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección Dispositivos -->
+                <div id="dispositivos" class="section-content">
+                    <div class="loading" id="devices-loading">
+                        🔄 Cargando dispositivos...
+                    </div>
+                    
+                    <div id="devices-content" style="display: none;">
+                        <div class="info-card">
+                            <h3>📱 Dispositivos de Entrenamiento Registrados</h3>
+                            <p>Lista de dispositivos de fitness que se han conectado a FreeBike.</p>
+                            
+                            <div style="overflow-x: auto;">
+                                <table class="devices-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Marca</th>
+                                            <th>Modelo</th>
+                                            <th>Tipo</th>
+                                            <th>Identificador</th>
+                                            <th>Última Conexión</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="devices-table-body">
+                                        <!-- Se llena dinámicamente -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="app-footer">
+            <!-- El contador se agregará aquí automáticamente -->
+        </footer>
+    </div>
+
+    <script type="module" src="js/visit-counter.js"></script>
+    <script type="module">
+        import { obtenerResumenTrafico, obtenerEstadisticasVisitas, obtenerNumeroVisitas, obtenerDispositivos, registrarDispositivo, estaAutenticado, escucharCambiosAuth, cerrarSesion, obtenerUsuarioActual } from './js/firebase.js';
+        import visitCounter from './js/visit-counter.js';
+
+        // ============================================
+        // PROTECCIÓN DE AUTENTICACIÓN
+        // ============================================
+        
+        // Función de debug para ControlPanel
+        function debugPanel(mensaje) {
+            console.log('🛡️ [ControlPanel]', mensaje);
+            // También mostrar en la interfaz si existe un elemento debug
+            const debugElement = document.getElementById('panel-debug');
+            if (debugElement) {
+                debugElement.textContent = mensaje;
+            }
+        }
+
+        // Verificar autenticación al cargar la página
+        function verificarAcceso() {
+            debugPanel('🔍 Verificando acceso al panel...');
+            
+            try {
+                const autenticado = estaAutenticado();
+                debugPanel(`📊 Estado de autenticación: ${autenticado}`);
+                
+                if (!autenticado) {
+                    debugPanel('❌ Usuario no autenticado, redirigiendo al login...');
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 1000);
+                    return false;
+                }
+                
+                const usuario = obtenerUsuarioActual();
+                if (usuario) {
+                    debugPanel(`✅ Usuario autenticado: ${usuario.email}`);
+                    return true;
+                } else {
+                    debugPanel('⚠️ Estado inconsistente: autenticado pero sin usuario');
+                    return false;
+                }
+            } catch (error) {
+                debugPanel(`💥 Error verificando acceso: ${error.message}`);
+                console.error('Error verificando acceso:', error);
+                return false;
+            }
+        }
+
+        // Agregar botón de logout al header
+        function agregarBotonLogout() {
+            const usuario = obtenerUsuarioActual();
+            if (usuario) {
+                const versionSection = document.querySelector('.version-section');
+                if (versionSection) {
+                    versionSection.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <span style="font-size: 0.8rem; color: var(--secondary-color);">
+                                👤 ${usuario.email}
+                            </span>
+                            <button id="logout-btn" style="
+                                background: none;
+                                border: none;
+                                color: var(--secondary-color);
+                                cursor: pointer;
+                                font-size: 0.8rem;
+                                padding: 0.2rem 0.5rem;
+                                border-radius: 4px;
+                                transition: color 0.3s;
+                            " title="Cerrar Sesión">
+                                🚪 Salir
+                            </button>
+                        </div>
+                    `;
+                    
+                    // Manejar logout
+                    document.getElementById('logout-btn').addEventListener('click', async () => {
+                        const confirmLogout = confirm('¿Estás seguro de que quieres cerrar sesión?');
+                        if (confirmLogout) {
+                            const resultado = await cerrarSesion();
+                            if (resultado.success) {
+                                window.location.href = 'login.html';
+                            }
+                        }
+                    });
+                    
+                    // Estilo hover para el botón
+                    const logoutBtn = document.getElementById('logout-btn');
+                    logoutBtn.addEventListener('mouseenter', () => {
+                        logoutBtn.style.color = 'var(--primary-color)';
+                        logoutBtn.style.backgroundColor = 'var(--border-color)';
+                    });
+                    logoutBtn.addEventListener('mouseleave', () => {
+                        logoutBtn.style.color = 'var(--secondary-color)';
+                        logoutBtn.style.backgroundColor = 'transparent';
+                    });
+                }
+            }
+        }
+
+        // Configurar theme switcher
+        function setupThemeSwitcher() {
+            const themeToggle = document.getElementById('theme-toggle-checkbox');
+            const body = document.body;
+
+            const applyTheme = (theme) => {
+                if (theme === 'dark') {
+                    body.classList.add('dark-theme');
+                    body.classList.remove('light-theme');
+                    if (themeToggle) themeToggle.checked = true;
+                } else {
+                    body.classList.add('light-theme');
+                    body.classList.remove('dark-theme');
+                    if (themeToggle) themeToggle.checked = false;
+                }
+            };
+
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            applyTheme(savedTheme);
+
+            if (themeToggle) {
+                themeToggle.addEventListener('change', () => {
+                    const newTheme = themeToggle.checked ? 'dark' : 'light';
+                    localStorage.setItem('theme', newTheme);
+                    applyTheme(newTheme);
+                });
+            }
+        }
+
+        // Navegación entre secciones
+        function setupSectionNavigation() {
+            const sectionBtns = document.querySelectorAll('.section-btn');
+            const sectionContents = document.querySelectorAll('.section-content');
+
+            sectionBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const targetSection = btn.dataset.section;
+                    
+                    // Actualizar botones
+                    sectionBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    // Actualizar contenido
+                    sectionContents.forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById(targetSection).classList.add('active');
+                    
+                    // Cargar datos específicos de la sección
+                    if (targetSection === 'estadisticas') {
+                        loadStatistics();
+                    } else if (targetSection === 'dispositivos') {
+                        loadDevices();
+                    }
+                });
+            });
+        }
+
+        // Cargar información del contador (sección contador)
+        async function loadCounterInfo() {
+            // Estado del contador
+            setTimeout(async () => {
+                try {
+                    const stats = await visitCounter.getStats();
+                    const estadoDiv = document.getElementById('contador-estado');
+                    estadoDiv.innerHTML = `
+                        <p><strong>Total de visitantes únicos:</strong> ${stats.totalVisits}</p>
+                        <p><strong>Estado:</strong> ${stats.isOnline ? '🟢 Online' : '🔴 Offline'}</p>
+                        ${stats.error ? `<p><strong>Error:</strong> ${stats.error}</p>` : ''}
+                    `;
+                } catch (error) {
+                    document.getElementById('contador-estado').innerHTML = `<p>❌ Error: ${error.message}</p>`;
+                }
+            }, 3000);
+            
+            // Información de la visita actual
+            setTimeout(() => {
+                const info = {
+                    url: window.location.href,
+                    referrer: document.referrer || 'Directo',
+                    userAgent: navigator.userAgent,
+                    language: navigator.language,
+                    platform: navigator.platform,
+                    screen: `${screen.width}x${screen.height}`,
+                    viewport: `${window.innerWidth}x${window.innerHeight}`
+                };
+                
+                // Detectar dispositivo
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                const deviceType = isMobile ? 'Móvil' : 'Escritorio';
+                
+                // Detectar navegador
+                let browser = 'Desconocido';
+                if (navigator.userAgent.includes('Chrome')) browser = 'Chrome';
+                else if (navigator.userAgent.includes('Firefox')) browser = 'Firefox';
+                else if (navigator.userAgent.includes('Safari')) browser = 'Safari';
+                else if (navigator.userAgent.includes('Edge')) browser = 'Edge';
+                
+                // Analizar referrer
+                let trafficSource = 'Directo';
+                if (info.referrer !== 'Directo') {
+                    try {
+                        const referrerUrl = new URL(info.referrer);
+                        if (referrerUrl.hostname.includes('google')) trafficSource = 'Google';
+                        else if (referrerUrl.hostname.includes('facebook')) trafficSource = 'Facebook';
+                        else if (referrerUrl.hostname.includes('github')) trafficSource = 'GitHub';
+                        else trafficSource = 'Referral';
+                    } catch (e) {
+                        trafficSource = 'Referral';
+                    }
+                }
+                
+                const infoDiv = document.getElementById('info-visita');
+                infoDiv.innerHTML = `
+                    <p><strong>🌐 Fuente de tráfico:</strong> ${trafficSource}</p>
+                    <p><strong>🔗 Referrer:</strong> ${info.referrer}</p>
+                    <p><strong>📱 Tipo de dispositivo:</strong> ${deviceType}</p>
+                    <p><strong>🌍 Navegador:</strong> ${browser}</p>
+                    <p><strong>🗣️ Idioma:</strong> ${info.language}</p>
+                    <p><strong>💻 Plataforma:</strong> ${info.platform}</p>
+                    <p><strong>📺 Pantalla:</strong> ${info.screen}</p>
+                    <p><strong>🖼️ Ventana:</strong> ${info.viewport}</p>
+                `;
+            }, 1000);
+        }
+
+        // Cargar estadísticas (sección estadísticas)
+        async function loadStatistics() {
+            try {
+                const [resumen, totalVisitantes] = await Promise.all([
+                    obtenerResumenTrafico(),
+                    obtenerNumeroVisitas()
+                ]);
+
+                if (!resumen) {
+                    throw new Error('No se pudo obtener el resumen de tráfico');
+                }
+
+                // Actualizar mini stats
+                document.getElementById('total-unique-visitors').textContent = totalVisitantes.toLocaleString();
+                
+                const hoy = new Date().toISOString().split('T')[0];
+                const visitantesHoy = resumen.porDia[hoy] || 0;
+                document.getElementById('today-unique-visitors').textContent = visitantesHoy;
+                
+                document.getElementById('total-page-views').textContent = (resumen.totalPageViews || 0).toLocaleString();
+                
+                const totalDispositivos = Object.values(resumen.porDispositivo).reduce((a, b) => a + b, 0);
+                const moviles = resumen.porDispositivo['Móvil'] || 0;
+                const porcentajeMoviles = totalDispositivos > 0 ? Math.round((moviles / totalDispositivos) * 100) : 0;
+                document.getElementById('mobile-percentage').textContent = porcentajeMoviles + '%';
+                
+                const fuentePrincipal = Object.entries(resumen.porFuente)
+                    .sort(([,a], [,b]) => b - a)[0];
+                document.getElementById('top-traffic-source').textContent = fuentePrincipal ? fuentePrincipal[0] : 'N/A';
+                
+                // Número de dispositivos registrados (lo implementaremos después)
+                document.getElementById('total-devices').textContent = '0';
+
+                document.getElementById('stats-loading').style.display = 'none';
+                document.getElementById('stats-content').style.display = 'block';
+
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+                document.getElementById('stats-loading').innerHTML = '❌ Error al cargar estadísticas';
+            }
+        }
+
+        // Cargar dispositivos (sección dispositivos)
+        async function loadDevices() {
+            try {
+                const dispositivos = await obtenerDispositivos();
+                const tbody = document.getElementById('devices-table-body');
+                
+                if (dispositivos.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: var(--secondary-color); padding: 2rem;">
+                                📱 No hay dispositivos registrados<br>
+                                <small>Los dispositivos se registrarán automáticamente cuando se conecten</small><br>
+                                <button class="action-btn" onclick="simularDispositivo()" style="margin-top: 1rem;">
+                                    🔧 Simular Dispositivo de Prueba
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    tbody.innerHTML = dispositivos.map(dispositivo => {
+                        const fechaUltimaConexion = new Date(dispositivo.ultimaConexion).toLocaleString('es-ES');
+                        const estadoClass = dispositivo.estado === 'online' ? 'online' : 'offline';
+                        const estadoTexto = dispositivo.estado === 'online' ? 'En línea' : 'Desconectado';
+                        
+                        return `
+                            <tr>
+                                <td><strong>${dispositivo.marca}</strong></td>
+                                <td>${dispositivo.displayName || dispositivo.modelo}</td>
+                                <td>${dispositivo.tipo}</td>
+                                <td><code>${dispositivo.identificador.slice(-8)}</code></td>
+                                <td>${fechaUltimaConexion}</td>
+                                <td><span class="device-status ${estadoClass}">${estadoTexto}</span></td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+
+                // Actualizar contador de dispositivos en estadísticas
+                document.getElementById('total-devices').textContent = dispositivos.length;
+
+                document.getElementById('devices-loading').style.display = 'none';
+                document.getElementById('devices-content').style.display = 'block';
+
+            } catch (error) {
+                console.error('Error loading devices:', error);
+                document.getElementById('devices-loading').innerHTML = '❌ Error al cargar dispositivos';
+            }
+        }
+
+        // Función para simular registro de dispositivo (para testing)
+        window.simularDispositivo = async function() {
+            const dispositivosDemo = [
+                { marca: 'Garmin', modelo: 'Edge 530', tipo: 'Ciclocomputador' },
+                { marca: 'Wahoo', modelo: 'ELEMNT BOLT', tipo: 'Ciclocomputador' },
+                { marca: 'Sigma', modelo: 'ROX 12.0', tipo: 'Ciclocomputador' },
+                { marca: 'Polar', modelo: 'H10', tipo: 'Monitor Cardíaco' },
+                { marca: 'Garmin', modelo: 'Rally XC100', tipo: 'Potenciómetro' },
+                { marca: 'Wahoo', modelo: 'TICKR', tipo: 'Monitor Cardíaco' }
+            ];
+            
+            const dispositivoRandom = dispositivosDemo[Math.floor(Math.random() * dispositivosDemo.length)];
+            
+            try {
+                await registrarDispositivo(dispositivoRandom);
+                alert(`✅ Dispositivo simulado registrado: ${dispositivoRandom.marca} ${dispositivoRandom.modelo}`);
+                
+                // Recargar la lista de dispositivos
+                loadDevices();
+            } catch (error) {
+                alert('❌ Error al registrar dispositivo: ' + error.message);
+            }
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', () => {
+            debugPanel('🚀 ControlPanel DOM cargado');
+            
+            // Dar tiempo a Firebase para inicializarse completamente
+            setTimeout(() => {
+                debugPanel('⏱️ Verificando acceso después de delay...');
+                
+                // Verificar acceso antes que cualquier otra cosa
+                if (!verificarAcceso()) {
+                    debugPanel('❌ Acceso denegado, deteniendo carga');
+                    return; // Si no está autenticado, salir antes de cargar contenido
+                }
+                
+                debugPanel('✅ Acceso verificado, cargando interfaz...');
+                setupThemeSwitcher();
+                setupSectionNavigation();
+                loadCounterInfo();
+                agregarBotonLogout();
+                
+                debugPanel('🎉 Panel de control completamente cargado');
+            }, 2000); // 2 segundos de delay para asegurar que Firebase esté listo
+        });
+
+        // Escuchar cambios en el estado de autenticación
+        escucharCambiosAuth((user) => {
+            if (user) {
+                debugPanel(`🔄 Auth listener: Usuario detectado: ${user.email}`);
+            } else {
+                debugPanel('🔄 Auth listener: Usuario desautenticado');
+                // Usuario desautenticado, redirigir al login después de un delay
+                setTimeout(() => {
+                    debugPanel('👋 Redirigiendo al login por desautenticación...');
+                    window.location.href = 'login.html';
+                }, 1000);
+            }
+        });
+    </script>
+</body>
+</html> 

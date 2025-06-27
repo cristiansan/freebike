@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚪 Acceso Directo - FreeBike</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+    <div style="
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        padding: 2rem;
+    ">
+        <div style="
+            background-color: var(--card-bg-color);
+            border-radius: 20px;
+            padding: 2rem;
+            max-width: 500px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        ">
+            <h1 style="color: var(--primary-color); margin-bottom: 1rem;">🚪 Acceso Directo al Panel</h1>
+            
+            <p style="color: var(--fg-color); margin-bottom: 2rem;">
+                Esta página te permite acceder directamente al Panel de Control, 
+                evitando el problema del loop infinito entre login.html y ControlPanel.html.
+            </p>
+            
+            <div id="status" style="
+                background-color: var(--bg-color);
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
+                padding: 1rem;
+                margin-bottom: 1.5rem;
+                font-family: monospace;
+                font-size: 0.9rem;
+                color: var(--secondary-color);
+            ">
+                🔄 Verificando estado de autenticación...
+            </div>
+            
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+                <a href="ControlPanel.html" style="
+                    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+                    color: white;
+                    text-decoration: none;
+                    padding: 1rem 2rem;
+                    border-radius: 12px;
+                    font-weight: bold;
+                    transition: transform 0.3s;
+                " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                    🚀 Ir al Panel de Control
+                </a>
+                
+                <a href="login.html" style="
+                    background: transparent;
+                    color: var(--primary-color);
+                    text-decoration: none;
+                    padding: 1rem 2rem;
+                    border: 2px solid var(--primary-color);
+                    border-radius: 12px;
+                    font-weight: bold;
+                    transition: all 0.3s;
+                " onmouseover="this.style.backgroundColor='var(--primary-color)'; this.style.color='white'" onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--primary-color)'">
+                    🔐 Ir al Login
+                </a>
+                
+                <a href="index.html" style="
+                    background: var(--secondary-color);
+                    color: var(--bg-color);
+                    text-decoration: none;
+                    padding: 1rem 2rem;
+                    border-radius: 12px;
+                    font-weight: bold;
+                    transition: opacity 0.3s;
+                " onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                    🏠 Volver a FreeBike
+                </a>
+            </div>
+            
+            <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <p style="color: var(--secondary-color); font-size: 0.8rem; margin: 0;">
+                    ⚠️ Si el loop persiste, usa este enlace directo para acceder al Panel de Control.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { estaAutenticado, obtenerUsuarioActual } from './js/firebase.js';
+
+        function updateStatus(mensaje, tipo = 'info') {
+            const status = document.getElementById('status');
+            let color;
+            switch(tipo) {
+                case 'success': color = 'var(--primary-color)'; break;
+                case 'error': color = '#dc3545'; break;
+                case 'warning': color = 'var(--accent-color)'; break;
+                default: color = 'var(--secondary-color)';
+            }
+            status.innerHTML = mensaje;
+            status.style.color = color;
+        }
+
+        // Verificar estado de autenticación
+        setTimeout(() => {
+            try {
+                if (estaAutenticado()) {
+                    const usuario = obtenerUsuarioActual();
+                    updateStatus(`✅ Autenticado como: ${usuario.email}`, 'success');
+                } else {
+                    updateStatus('❌ No autenticado - Necesitas hacer login primero', 'warning');
+                }
+            } catch (error) {
+                updateStatus('⚠️ Error verificando autenticación', 'error');
+            }
+        }, 2000);
+
+        // Setup theme
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.body.className = savedTheme + '-theme';
+    </script>
+</body>
+</html> 

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔐 Login - FreeBike Admin</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        }
+        
+        .login-card {
+            background-color: var(--card-bg-color);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 90%;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .login-logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1rem;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+        
+        .login-title {
+            font-size: 1.8rem;
+            color: var(--primary-color);
+            margin: 0 0 0.5rem 0;
+            font-weight: bold;
+        }
+        
+        .login-subtitle {
+            color: var(--secondary-color);
+            font-size: 1rem;
+            margin: 0;
+        }
+        
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-label {
+            color: var(--fg-color);
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .form-input {
+            background-color: var(--bg-color);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0.8rem 1rem;
+            font-family: var(--font-main);
+            font-size: 1rem;
+            color: var(--fg-color);
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(54, 122, 246, 0.1);
+        }
+        
+        .form-input:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .login-button {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 1rem;
+            font-family: var(--font-main);
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .login-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(54, 122, 246, 0.4);
+        }
+        
+        .login-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .login-button.loading {
+            color: transparent;
+        }
+        
+        .login-button.loading::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid transparent;
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            background-color: #ffe6e6;
+            color: #d63384;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            padding: 0.8rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            display: none;
+        }
+        
+        .error-message.show {
+            display: block;
+        }
+        
+        .back-link {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+        
+        .back-link a {
+            color: var(--secondary-color);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+        
+        .back-link a:hover {
+            color: var(--primary-color);
+        }
+        
+        .create-account-section {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+        }
+        
+        .create-account-btn {
+            background: transparent;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+            border-radius: 12px;
+            padding: 0.8rem 1.5rem;
+            font-family: var(--font-main);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+        
+        .create-account-btn:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .admin-info {
+            background-color: var(--accent-color);
+            color: var(--bg-color);
+            border-radius: 8px;
+            padding: 0.8rem;
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+        
+        @media (max-width: 600px) {
+            .login-card {
+                padding: 2rem;
+                border-radius: 15px;
+            }
+            
+            .login-title {
+                font-size: 1.5rem;
+            }
+            
+            .login-logo {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-logo">🔐</div>
+                <h1 class="login-title">Panel de Control</h1>
+                <p class="login-subtitle">Acceso restringido - FreeBike Admin</p>
+            </div>
+
+            <div class="admin-info">
+                ℹ️ Solo administradores autorizados pueden acceder al Panel de Control
+            </div>
+
+
+
+            <form class="login-form" id="loginForm">
+                <div class="error-message" id="errorMessage"></div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="email">📧 Email</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        class="form-input" 
+                        required 
+                        placeholder="tu@email.com"
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="password">🔑 Contraseña</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        class="form-input" 
+                        required 
+                        placeholder="••••••••"
+                    >
+                </div>
+                
+                <button type="submit" class="login-button" id="loginButton">
+                    🚀 Acceder al Panel
+                </button>
+            </form>
+
+
+
+            <div class="back-link">
+                <a href="index.html">← Volver a FreeBike</a>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { iniciarSesion, crearUsuario, escucharCambiosAuth, estaAutenticado } from './js/firebase.js';
+
+        // Elementos del DOM
+        const loginForm = document.getElementById('loginForm');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const loginButton = document.getElementById('loginButton');
+        const errorMessage = document.getElementById('errorMessage');
+
+        // Configurar theme switcher
+        function setupTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.body.className = savedTheme + '-theme';
+        }
+
+        // Mostrar error
+        function mostrarError(mensaje) {
+            errorMessage.textContent = mensaje;
+            errorMessage.classList.add('show');
+            setTimeout(() => {
+                errorMessage.classList.remove('show');
+            }, 5000);
+        }
+
+        // Ocultar error
+        function ocultarError() {
+            errorMessage.classList.remove('show');
+        }
+
+        // Cambiar estado de carga
+        function setLoadingState(loading) {
+            loginButton.disabled = loading;
+            emailInput.disabled = loading;
+            passwordInput.disabled = loading;
+            
+            if (loading) {
+                loginButton.classList.add('loading');
+            } else {
+                loginButton.classList.remove('loading');
+            }
+        }
+
+        // Verificar si ya está autenticado
+        function verificarAutenticacion() {
+            debug('🔍 Verificando autenticación...');
+            
+            // Evitar redirect si venimos de ControlPanel (para evitar loops)
+            const fromPanel = document.referrer.includes('ControlPanel.html');
+            if (fromPanel) {
+                debug('⚠️ Venimos de ControlPanel, no hacer redirect automático');
+                return false;
+            }
+            
+            if (estaAutenticado()) {
+                debug('✅ Usuario ya autenticado, redirigiendo...');
+                setTimeout(() => {
+                    window.location.href = 'ControlPanel.html';
+                }, 1000);
+                return true;
+            } else {
+                debug('❌ Usuario no autenticado');
+                return false;
+            }
+        }
+
+        // Manejar envío del formulario
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            debug('📝 Formulario enviado');
+            ocultarError();
+            setLoadingState(true);
+
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+
+            debug(`📧 Email: ${email}, 🔑 Password: ${password.length} caracteres`);
+
+            if (!email || !password) {
+                mostrarError('Por favor completa todos los campos');
+                setLoadingState(false);
+                debug('❌ Campos vacíos');
+                return;
+            }
+
+            if (!email.includes('@')) {
+                mostrarError('Por favor ingresa un email válido');
+                setLoadingState(false);
+                debug('❌ Email inválido');
+                return;
+            }
+
+            try {
+                debug('🔐 Intentando iniciar sesión...');
+                const resultado = await iniciarSesion(email, password);
+                debug(`📊 Resultado: ${JSON.stringify(resultado)}`);
+                
+                if (resultado.success) {
+                    debug('✅ Login exitoso, esperando y redirigiendo...');
+                    // Dar tiempo para que Firebase se actualice
+                    setTimeout(() => {
+                        window.location.href = 'ControlPanel.html';
+                    }, 2000);
+                } else {
+                    debug(`❌ Login fallido: ${resultado.error}`);
+                    mostrarError(resultado.error);
+                    setLoadingState(false);
+                }
+            } catch (error) {
+                console.error('Error durante el login:', error);
+                debug(`💥 Exception: ${error.message}`);
+                mostrarError('Error de conexión. Verifica tu conexión a internet.');
+                setLoadingState(false);
+            }
+        });
+
+
+
+        // Función de debug
+        function debug(mensaje) {
+            console.log('🐛', mensaje);
+            const debugInfo = document.getElementById('debugInfo');
+            const debugText = document.getElementById('debugText');
+            if (debugInfo && debugText) {
+                debugInfo.style.display = 'block';
+                debugText.innerHTML = mensaje;
+            }
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', () => {
+            debug('🚀 Página de login cargada');
+            setupTheme();
+            
+            // Verificar autenticación después de un delay
+            setTimeout(() => {
+                verificarAutenticacion();
+            }, 1000);
+            
+            // Enfocar el campo email
+            emailInput.focus();
+        });
+
+        // Escuchar cambios de autenticación
+        escucharCambiosAuth((user) => {
+            if (user) {
+                debug(`🔄 Usuario autenticado detectado: ${user.email}`);
+                
+                // Evitar redirect automático si venimos de ControlPanel
+                const fromPanel = document.referrer.includes('ControlPanel.html');
+                if (fromPanel) {
+                    debug('⚠️ Evitando redirect automático desde ControlPanel');
+                    return;
+                }
+                
+                // Redirigir al panel si no estamos ya ahí
+                if (!window.location.href.includes('ControlPanel.html')) {
+                    debug('🎯 Redirigiendo al panel de control...');
+                    setTimeout(() => {
+                        window.location.href = 'ControlPanel.html';
+                    }, 500);
+                }
+            } else {
+                debug('👤 Usuario no autenticado');
+            }
+        });
+    </script>
+</body>
+</html> 

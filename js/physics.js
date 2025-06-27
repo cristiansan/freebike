@@ -65,4 +65,43 @@ export function calculateSpeedFromPower(powerInWatts) {
     }
 
     return (low + high) / 2; // Devuelve la velocidad estimada en m/s
+}
+
+/**
+ * Calcula velocidad aproximada basada en cadencia (RPM) para rodillos sin potenciómetro
+ * @param {number} rpm - Cadencia en revoluciones por minuto
+ * @param {number} gearRatio - Ratio de engranajes (plato/cassette), default 2.9
+ * @returns {number} Velocidad estimada en m/s
+ */
+export function calculateSpeedFromCadence(rpm, gearRatio = 2.9) {
+    if (rpm <= 0) return 0;
+    
+    // Parámetros típicos de bicicleta de carretera
+    const wheelCircumference = 2.1; // metros (rueda 700c típica)
+    
+    // Calcular velocidad: RPM × gear ratio × circumferencia / 60
+    const speedMs = (rpm * gearRatio * wheelCircumference) / 60;
+    
+    // Limitar a velocidades realistas (0-25 m/s = 0-90 km/h)
+    return Math.min(Math.max(speedMs, 0), 25);
+}
+
+/**
+ * Detecta si estamos en modo "rodillo" (indoor trainer) basado en falta de movimiento GPS
+ * @returns {boolean} true si parece estar en un rodillo
+ */
+export function isIndoorMode() {
+    // Si llevamos más de 30 segundos grabando y la distancia GPS es casi 0, probablemente es rodillo
+    if (!window.isRecording || !window.sessionStats) return false;
+    
+    const recordingTime = getElapsedTimeMs() / 1000; // segundos
+    const distance = window.sessionStats.distance || 0; // km
+    
+    return recordingTime > 30 && distance < 0.01; // Menos de 10m en 30+ segundos
+}
+
+function getElapsedTimeMs() {
+    if (!window.startTime) return 0;
+    const now = new Date();
+    return now - window.startTime - (window.pausedDuration || 0);
 } 

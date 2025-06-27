@@ -1,4 +1,4 @@
-import { setupUI, resetWattsPerHour } from './ui.js';
+import { setupUI, resetWattsPerHour, resetVirtualDistance } from './ui.js';
 import { connectHR, connectPower, connectRPM, startGPS, restoreConnections, resetGPSData } from './app.js';
 import { db } from './firebase.js';
 import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
@@ -205,6 +205,7 @@ function handleClick() {
     // Resetear datos y UI al iniciar
     resetGPSData();
     resetWattsPerHour();
+    resetVirtualDistance();
     document.getElementById('gps-distance').textContent = '0.00 km';
     document.getElementById('gps-speed').textContent = '0.0';
     document.getElementById('sensor-speed').textContent = '--';

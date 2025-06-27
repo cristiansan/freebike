@@ -1,4 +1,4 @@
-import { calculateSpeedFromPower } from './physics.js';
+import { calculateSpeedFromPower, calculateSpeedFromCadence, isIndoorMode } from './physics.js';
 
 // ----------------------
 // UI Setup
@@ -37,14 +37,39 @@ function flushAllBuffers() {
         document.getElementById('power').textContent = avg.power;
         console.log(`⚡ Potencia recibida: ${avg.power}W`);
         updateWattsPerHour(avg.power); // Actualizar watts/h
+    } 
+    // En modo rodillo sin potenciómetro, estimar potencia desde cadencia
+    else if (indoorMode && avg.rpm !== undefined && avg.rpm > 30) {
+        const estimatedPower = Math.round(avg.rpm * 2.5); // Estimación simple: ~2.5W por RPM
+        console.log(`🔄 Potencia estimada desde cadencia: ${estimatedPower}W`);
+        updateWattsPerHour(estimatedPower);
     }
     if (avg.rpm !== undefined) document.getElementById('rpm').textContent = avg.rpm;
 
     // --- Lógica de cálculo de velocidad ---
     let finalSpeed_ms = (avg.speed !== undefined) ? avg.speed : 0;
-    // Si la velocidad GPS es muy baja (o inexistente) y hay potencia, calcularla.
-    if (finalSpeed_ms < 0.5 && (avg.power !== undefined && avg.power > 10)) {
-        finalSpeed_ms = calculateSpeedFromPower(avg.power);
+    
+    // Detectar modo rodillo y calcular velocidad virtual
+    const indoorMode = isIndoorMode();
+    
+    if (indoorMode || finalSpeed_ms < 0.5) {
+        console.log(`🏠 Modo rodillo detectado: ${indoorMode}`);
+        
+        // Prioridad 1: Calcular desde potencia si está disponible
+        if (avg.power !== undefined && avg.power > 10) {
+            finalSpeed_ms = calculateSpeedFromPower(avg.power);
+            console.log(`⚡ Velocidad desde potencia: ${(finalSpeed_ms * 3.6).toFixed(1)} km/h`);
+        }
+        // Prioridad 2: Calcular desde cadencia si no hay potencia
+        else if (avg.rpm !== undefined && avg.rpm > 30) {
+            finalSpeed_ms = calculateSpeedFromCadence(avg.rpm);
+            console.log(`🔄 Velocidad desde cadencia: ${(finalSpeed_ms * 3.6).toFixed(1)} km/h`);
+        }
+        
+        // Calcular distancia virtual en modo rodillo
+        if (finalSpeed_ms > 0 && window.isRecording && !window.isPaused) {
+            updateVirtualDistance(finalSpeed_ms);
+        }
     }
 
     // Actualizar la UI de velocidad siempre
@@ -206,6 +231,10 @@ let wattsPerHourStartTime = null;
 let sensorSpeedEnabled = false;
 let lastMotionTime = 0;
 
+// Variables para modo rodillo (indoor)
+let lastVirtualSpeedUpdate = 0;
+let virtualDistance = 0;
+
 export function updateWattsPerHour(powerValue) {
   if (!window.isRecording || window.isPaused || !powerValue || powerValue <= 0) {
     console.log(`🔋 Watts/h no actualizado - Recording: ${window.isRecording}, Paused: ${window.isPaused}, Power: ${powerValue}`);
@@ -311,6 +340,39 @@ function toggleSensorSpeed() {
     btn.classList.remove('connected');
     document.getElementById('sensor-speed').textContent = '--';
   }
+}
+
+// Función para actualizar distancia virtual en modo rodillo
+function updateVirtualDistance(speedMs) {
+  const now = Date.now();
+  
+  if (lastVirtualSpeedUpdate > 0) {
+    const deltaTime = (now - lastVirtualSpeedUpdate) / 1000; // segundos
+    const deltaDistance = speedMs * deltaTime; // metros
+    
+    virtualDistance += deltaDistance / 1000; // convertir a km
+    
+    // Actualizar UI y sessionStats
+    if (window.sessionStats) {
+      window.sessionStats.distance = virtualDistance;
+    }
+    
+    const distanceElement = document.getElementById('gps-distance');
+    if (distanceElement) {
+      distanceElement.textContent = virtualDistance.toFixed(2) + ' km';
+    }
+    
+    console.log(`🚴 Distancia virtual: +${(deltaDistance).toFixed(1)}m, Total: ${virtualDistance.toFixed(3)}km`);
+  }
+  
+  lastVirtualSpeedUpdate = now;
+}
+
+// Función para resetear distancia virtual
+export function resetVirtualDistance() {
+  virtualDistance = 0;
+  lastVirtualSpeedUpdate = 0;
+  console.log("🔄 Distancia virtual reseteada");
 }
 
 

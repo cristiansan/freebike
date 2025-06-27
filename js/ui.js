@@ -31,6 +31,9 @@ function flushAllBuffers() {
         return;
     }
 
+    // Detectar modo rodillo al principio
+    const indoorMode = isIndoorMode();
+    
     // Actualizar UI para sensores (HR, Power, RPM) siempre que haya datos
     if (avg.bpm !== undefined) document.getElementById('hr-display').textContent = avg.bpm;
     if (avg.power !== undefined) {
@@ -48,9 +51,6 @@ function flushAllBuffers() {
 
     // --- Lógica de cálculo de velocidad ---
     let finalSpeed_ms = (avg.speed !== undefined) ? avg.speed : 0;
-    
-    // Detectar modo rodillo y calcular velocidad virtual
-    const indoorMode = isIndoorMode();
     
     if (indoorMode || finalSpeed_ms < 0.5) {
         console.log(`🏠 Modo rodillo detectado: ${indoorMode}`);
